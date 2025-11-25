@@ -478,6 +478,44 @@ body {
   background: #e8ddff;
 }
 
+/* Editable row title (for custom rows) */
+.row-title-editable {
+  display: inline-block;
+  min-width: 80px;
+  border-bottom: 1px dashed #cdbfff;
+  padding: 1px 2px;
+  font-size: 12px;
+  cursor: text;
+  position: relative;
+}
+
+/* Placeholder state */
+.row-title-editable.placeholder {
+  color: #b3a7d6;
+  font-style: italic;
+}
+
+/* Small pencil indicator */
+.row-title-editable::after {
+  content: "✎";
+  font-size: 10px;
+  color: #c1b4f5;
+  margin-left: 4px;
+  opacity: 0.7;
+}
+
+/* New row highlight animation */
+.custom-row-highlight {
+  animation: cyf-row-highlight 1.2s ease-out;
+}
+
+@keyframes cyf-row-highlight {
+  0%   { background-color: #fff8d2; }
+  100% { background-color: transparent; }
+}
+
+
+
 /* custom rows */
 .trash-inline {
   margin-left: 6px;
