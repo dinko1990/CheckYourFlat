@@ -1,829 +1,942 @@
-// js/main.js
-// No fetch, static table exists in HTML (hidden / disabled initially)
+(function () {
+  const { jsPDF } = window.jspdf;
 
-// ---------------------- DATA ----------------------
+  /* ========= SIDEBAR NAV ========= */
+  const navItems = document.querySelectorAll(".nav-item");
+  const sidebarEl = document.getElementById("sidebar");
+  const sidebarToggle = document.getElementById("sidebar-toggle");
+  const step1Card = document.getElementById("step1-card");
+  const historyCard = document.getElementById("history-card");
 
-// Template of fields (types + labels)
-const inspectionFields = [
-  { id: "adresse",          label: "Adresse",                      type: "text" },
-  { id: "objekttyp",        label: "Objekttyp",                    type: "select",
-    options: ["Etagenwohnung","Wohnung","Einfamilienhaus","Gewerbe","MFH"] },
-  { id: "baujahr",          label: "Baujahr",                      type: "text" },
-  { id: "wohnflaeche",      label: "Wohnfläche",                   type: "text" },
-  { id: "grundstueck",      label: "bei Haus Grundstücksfläche",   type: "text" },
-  { id: "etage",            label: "Etage",                        type: "text" },
-  { id: "vollgeschosse",    label: "wieviele Vollgeschosse",       type: "text" },
-  { id: "keller",           label: "Keller",                       type: "text" }, // mandatory
-  { id: "fassade_daemmung", label: "Fassade – Dämmung",            type: "select",
-    options: ["unbekannt","Dämmung","keine Dämmung"] },
-  { id: "dachgeschoss",     label: "Dachgeschoss",                 type: "select",
-    options: ["unbekannt","ausgebaut","nicht ausgebaut","Flachdach"] },
-  { id: "straenge",         label: "Stränge erneuert",             type: "select",
-    options: ["unbekannt","Ja","Nein"] },
-  { id: "fenster_material", label: "Fenster Material",             type: "select",
-    options: ["unbekannt","Holz","Kunststoff","Sonstiges"] },
-  { id: "fenster_verglas",  label: "Fenster Verglasung",           type: "select",
-    options: ["unbekannt","Einfach verglast","Doppelt verglast","Sonstiges"] },
-  { id: "baujahr_fenster",  label: "Baujahr Fenster",              type: "text" },
-  { id: "heizung",          label: "Heizung",                      type: "select",
-    options: ["unbekannt","Ofenheizung","Gas-Etagenheizung","Gas-Zentralheizung",
-              "Öl-Zentralheizung","Fernwärme","Fernwärme (Gas)","Sonstiges"] },
-  { id: "baujahr_heizung",  label: "Baujahr Heizung",              type: "text" },
-  { id: "warmwasser",       label: "Warmwasser",                   type: "select",
-    options: ["unbekannt","zentral","zentral (mit Warmwasser)","dezentral"] }
-];
-
-// Example exposé data (fake Berlin)
-const exposeData = {
-  adresse:          "Kantstraße 123, 10625 Berlin",
-  objekttyp:        "Etagenwohnung",
-  baujahr:          "1960",
-  wohnflaeche:      "ca. 67 m²",
-  grundstueck:      null,
-  etage:            "2",
-  vollgeschosse:    "5",
-  keller:           "Kellerabteil vorhanden",
-  fassade_daemmung: null,
-  dachgeschoss:     null,
-  straenge:         null,
-  fenster_material: null,
-  fenster_verglas:  null,
-  baujahr_fenster:  null,
-  heizung:          "Fernwärme (Gas)",
-  baujahr_heizung:  null,
-  warmwasser:       "zentral (mit Warmwasser)"
-};
-
-// Which fields are mandatory (we'll mark them in the label)
-const mandatoryFields = ["keller", "adresse", "wohnflaeche"];
-
-// Sample notes for autofill into "Reality" column
-const sampleNotes = [
-  "Matches exposé. Staircase worn but OK.",
-  "Ceiling lower than expected; slight smoke smell.",
-  "Feels smaller than advertised.",
-  "Walls need plaster & new paint.",
-  "Small backyard, needs gardening.",
-  "3rd floor, no lift.",
-  "4 full floors + attic.",
-  "Keller slightly damp but usable.",
-  "Facade OK, some cracks.",
-  "Attic partly converted.",
-  "Old pipes in places.",
-  "Mixed wooden / plastic windows.",
-  "Double glazing only in living room.",
-  "Windows early 2000s.",
-  "Gas central heating, boiler in basement.",
-  "Boiler from ~1998.",
-  "Hot water central for all flats."
-];
-
-// ---------------------- Helpers & globals ----------------------
-const $  = (sel) => document.querySelector(sel);
-const $$ = (sel) => Array.from(document.querySelectorAll(sel));
-
-let currentPdfDoc   = null;
-let currentPhotoRow = null;
-
-const HISTORY_KEY = "cyf_history_v1";
-
-// Get a <tr> for a given field id, assuming: <tr data-field-id="adresse">
-function getRowByFieldId(id) {
-  return document.querySelector(`tr[data-field-id="${id}"]`);
-}
-
-// ---------------------- Init ----------------------
-document.addEventListener("DOMContentLoaded", () => {
-  initSidebar();
-  initMobileNav();
-  initViewSwitching();
-  initSteps();
-  initFileUpload();
-  initStepActions();
-  initSignaturePad();
-  initPdfModal();
-  initCameraModal();
-  initHistory();
-  initMandatoryLabels();
-});
-
-// ---------------------- Sidebar / view switching ----------------------
-function initSidebar() {
-  const sidebar = $("#sidebar");
-  const toggle  = $("#sidebar-toggle");
-  if (!sidebar || !toggle) return;
-
-  toggle.addEventListener("click", () => {
-    sidebar.classList.toggle("collapsed");
-  });
-}
-
-function initViewSwitching() {
-  const historyCard = $("#history-card");
-  const stepCards = ["#step1-card", "#step2-card", "#step3-card"].map((id) =>
-    $(id)
-  );
-
-  if (historyCard) historyCard.style.display = "none";
-
-  function showView(view) {
-    if (view === "history") {
-      if (historyCard) historyCard.style.display = "block";
-      stepCards.forEach((c) => c && (c.style.display = "none"));
-    } else {
-      if (historyCard) historyCard.style.display = "none";
-      stepCards.forEach((c) => c && (c.style.display = ""));
-    }
-
-    $$(".nav-item").forEach((btn) => {
-      btn.classList.toggle("active", btn.dataset.view === view);
-    });
-
-    if (view === "logout") {
-      alert("Logout clicked (no backend).");
-    }
-  }
-
-  $$(".nav-item").forEach((btn) => {
+  navItems.forEach(btn => {
     btn.addEventListener("click", () => {
-      const view = btn.dataset.view || "new";
-      showView(view);
-    });
-  });
-
-  $("#nav-new-expose")?.addEventListener("click", () => showView("new"));
-  $("#nav-history")?.addEventListener("click", () => showView("history"));
-  $("#nav-logout-mobile")?.addEventListener("click", () => showView("logout"));
-}
-
-// ---------------------- Mobile menu ----------------------
-function initMobileNav() {
-  const toggle = $("#mobile-left-toggle");
-  const menu   = $("#mobile-left-menu");
-  if (!toggle || !menu) return;
-
-  toggle.addEventListener("click", () => {
-    menu.classList.toggle("open");
-  });
-}
-
-// ---------------------- Steps bar ----------------------
-function initSteps() {
-  const stepButtons = $$("#steps-floating .steps-inner button");
-  stepButtons.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      if (btn.disabled) return;
-      const step = parseInt(btn.dataset.step, 10);
-      goToStep(step);
-    });
-  });
-}
-
-function goToStep(step) {
-  const cards = {
-    1: $("#step1-card"),
-    2: $("#step2-card"),
-    3: $("#step3-card"),
-  };
-
-  Object.entries(cards).forEach(([s, card]) => {
-    if (!card) return;
-    if (parseInt(s, 10) === step) {
-      card.classList.remove("step-disabled");
-      card.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  });
-
-  $$("#steps-floating .steps-inner button").forEach((btn) => {
-    const s = parseInt(btn.dataset.step, 10);
-    btn.classList.toggle("active", s === step);
-  });
-}
-
-// ---------------------- Mark mandatory labels ----------------------
-function initMandatoryLabels() {
-  mandatoryFields.forEach((id) => {
-    const row = getRowByFieldId(id);
-    if (!row) return;
-    const labelCell = row.querySelector("td:first-child");
-    if (!labelCell) return;
-    const text = labelCell.textContent.trim();
-    if (!text.endsWith("*")) {
-      labelCell.textContent = text + " *";
-    }
-  });
-}
-
-// ---------------------- Step 1 – Exposé ----------------------
-function initFileUpload() {
-  const dropArea       = $("#drop-area");
-  const fileInput      = $("#file-input");
-  const fileInfo       = $("#file-info");
-  const browseBtn      = $("#select-file-btn");
-  const loadExampleBtn = $("#load-example-btn");
-
-  if (!dropArea || !fileInput || !fileInfo || !browseBtn) return;
-
-  const preventDefaults = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
-  ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
-    dropArea.addEventListener(eventName, preventDefaults, false);
-  });
-
-  ["dragenter", "dragover"].forEach((eventName) => {
-    dropArea.addEventListener(
-      eventName,
-      () => dropArea.classList.add("highlight"),
-      false
-    );
-  });
-
-  ["dragleave", "drop"].forEach((eventName) => {
-    dropArea.addEventListener(
-      eventName,
-      () => dropArea.classList.remove("highlight"),
-      false
-    );
-  });
-
-  dropArea.addEventListener("drop", (e) => {
-    const file = e.dataTransfer.files[0];
-    handleFile(file);
-  });
-
-  browseBtn.addEventListener("click", () => fileInput.click());
-  fileInput.addEventListener("change", () => {
-    const file = fileInput.files[0];
-    handleFile(file);
-  });
-
-  // Fake Berlin exposé button
-  loadExampleBtn?.addEventListener("click", () => {
-    fileInfo.textContent = "Using example exposé: Kantstraße 123, 10625 Berlin";
-    fillExposeFromData(exposeData);
-    unlockStep2();
-    goToStep(2);
-  });
-
-  function handleFile(file) {
-    if (!file) return;
-    if (file.type !== "application/pdf") {
-      alert("Please upload a PDF.");
-      return;
-    }
-    fileInfo.textContent = `Loaded: ${file.name}`;
-    // TODO: here is where you'd parse the real PDF and call fillExposeFromData(parsedExpose)
-    
-    function fillExposeFromData(data) {
-    inspectionFields.forEach((field) => {
-    const id    = field.id;
-    const value = Object.prototype.hasOwnProperty.call(data, id) ? data[id] : null;
-    const row   = getRowByFieldId(id);
-    if (!row) return;
-
-    const exposeEl = row.querySelector(".expose-input");
-    if (!exposeEl) return;
-
-    // Set value
-    if (exposeEl.tagName === "SELECT") {
-      exposeEl.value = value ?? "unbekannt";
-    } else {
-      exposeEl.value = value ?? "";
-    }
-
-    // Lock it
-    exposeEl.disabled = true;
-    exposeEl.classList.add("locked-expose");
-  });
-}
-    
-    unlockStep2();
-    goToStep(2);
-  }
-
-  function unlockStep2() {
-    const step2Card = $("#step2-card");
-    if (step2Card) step2Card.classList.remove("step-disabled");
-
-    const step2Button = document.querySelector(
-      '#steps-floating .steps-inner button[data-step="2"]'
-    );
-    if (step2Button) {
-      step2Button.disabled = false;
-      step2Button.classList.add("unlocked");
-    }
-  }
-}
-
-// Fill Exposé column from a data object { id: value, ... }
-function fillExposeFromData(data) {
-  inspectionFields.forEach((field) => {
-    const id    = field.id;
-    const value = Object.prototype.hasOwnProperty.call(data, id) ? data[id] : null;
-    const row   = getRowByFieldId(id);
-    if (!row) return;
-    const exposeEl = row.querySelector(".expose-input");
-    if (!exposeEl) return;
-
-    if (exposeEl.tagName === "SELECT") {
-      const val = value ?? "unbekannt";
-      exposeEl.value = val;
-    } else {
-      exposeEl.value = value ?? "";
-    }
-  });
-}
-
-// ---------------------- Step 2 – Inspection (Reality column) ----------------------
-function initStepActions() {
-  const addTextBtn  = $("#add-text-row-btn");
-  const addPhotoBtn = $("#add-photo-row-btn");
-  const resetBtn    = $("#reset-example-btn");
-  const mockBtn     = $("#mock-autofill-btn");
-  const goStep3Btn  = $("#go-step3-btn");
-
-  addTextBtn?.addEventListener("click", () => {
-    const label = prompt("Name of the new field:", "Custom note");
-    const tbody = $("#comparison-body");
-    if (!tbody) return;
-    const tr = createCustomTextRow(label || "Custom note");
-    tbody.appendChild(tr);
-  });
-
-  addPhotoBtn?.addEventListener("click", () => {
-    const tbody = $("#comparison-body");
-    if (!tbody) return;
-    const tr = createPhotoRow();
-    tbody.appendChild(tr);
-  });
-
-  // Reset Exposé values back to fake Berlin example
-  resetBtn?.addEventListener("click", () => {
-    fillExposeFromData(exposeData);
-  });
-
-  // Fill Reality column with sampleNotes
-  mockBtn?.addEventListener("click", () => {
-    const realityFields = Array.from(
-      document.querySelectorAll("#comparison-body .reality-input")
-    );
-    let i = 0;
-    realityFields.forEach((field) => {
-      if (sampleNotes[i]) {
-        field.value = sampleNotes[i];
-        i++;
+      navItems.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      const view = btn.dataset.view;
+      if (view === "new") {
+        step1Card.scrollIntoView({ behavior: "smooth", block: "start" });
+      } else if (view === "history") {
+        historyCard.scrollIntoView({ behavior: "smooth", block: "start" });
+      } else if (view === "logout") {
+        alert("Logout is not wired yet – plug this into your auth flow.");
       }
     });
   });
 
-  goStep3Btn?.addEventListener("click", () => {
-    const step3Card = $("#step3-card");
-    if (step3Card) step3Card.classList.remove("step-disabled");
+  sidebarToggle.addEventListener("click", () => {
+    sidebarEl.classList.toggle("collapsed");
+    sidebarToggle.textContent = sidebarEl.classList.contains("collapsed") ? "»" : "«";
+  });
 
-    const step3Button = document.querySelector(
-      '#steps-floating .steps-inner button[data-step="3"]'
-    );
-    if (step3Button) {
-      step3Button.disabled = false;
-      step3Button.classList.add("unlocked");
+  /* ========= MOBILE LEFT MENU ========= */
+  const mobileMenu = document.getElementById("mobile-left-menu");
+  const mobileToggle = document.getElementById("mobile-left-toggle");
+  const navNewMobile = document.getElementById("nav-new-expose");
+  const navHistMobile = document.getElementById("nav-history");
+  const navLogoutMobile = document.getElementById("nav-logout-mobile");
+
+  mobileToggle.addEventListener("click", () => {
+    mobileMenu.classList.toggle("open");
+  });
+
+  navNewMobile.addEventListener("click", () => {
+    mobileMenu.classList.remove("open");
+    if (confirm("Start a new exposé? This will reset the mask to defaults.")) {
+      window.location.reload();
     }
-    goToStep(3);
   });
-}
-
-// Extra text-only row for custom field
-function createCustomTextRow(label) {
-  const tr = document.createElement("tr");
-  tr.classList.add("row-custom");
-
-  const tdField = document.createElement("td");
-  tdField.textContent = label;
-  tr.appendChild(tdField);
-
-  const tdExpose = document.createElement("td");
-  const exposeInput = document.createElement("input");
-  exposeInput.type = "text";
-  exposeInput.className = "expose-input";
-  tdExpose.appendChild(exposeInput);
-  tr.appendChild(tdExpose);
-
-  const tdReality = document.createElement("td");
-  const realityInput = document.createElement("textarea");
-  realityInput.className = "reality-input";
-  realityInput.rows = 2;
-  tdReality.appendChild(realityInput);
-  tr.appendChild(tdReality);
-
-  return tr;
-}
-
-// Photo row for camera
-function createPhotoRow() {
-  const tr = document.createElement("tr");
-  tr.classList.add("row-photo");
-
-  const tdField = document.createElement("td");
-  tdField.textContent = "Photo";
-  tr.appendChild(tdField);
-
-  const tdExpose = document.createElement("td");
-  tdExpose.textContent = "";
-  tr.appendChild(tdExpose);
-
-  const tdReality = document.createElement("td");
-  const btn = document.createElement("button");
-  btn.type = "button";
-  btn.textContent = "Add photo (camera)";
-  btn.className = "btn-chip";
-
-  const img = document.createElement("img");
-  img.style.display   = "block";
-  img.style.maxWidth  = "140px";
-  img.style.marginTop = "4px";
-
-  btn.addEventListener("click", () => {
-    openCameraForRow(tr);
+  navHistMobile.addEventListener("click", () => {
+    mobileMenu.classList.remove("open");
+    historyCard.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  navLogoutMobile.addEventListener("click", () => {
+    mobileMenu.classList.remove("open");
+    alert("Logout is not wired yet – plug this into your auth flow.");
   });
 
-  tdReality.appendChild(btn);
-  tdReality.appendChild(img);
-  tr.appendChild(tdReality);
+  /* ========= STEP GATING (1–2–3) ========= */
+  let currentMaxStep = 1;
+  const stepsFloating = document.getElementById("steps-floating");
+  const stepButtons = stepsFloating.querySelectorAll("button");
+  const stepCards = {
+    1: document.getElementById("step1-card"),
+    2: document.getElementById("step2-card"),
+    3: document.getElementById("step3-card")
+  };
 
-  return tr;
-}
+  function updateStepAccess() {
+    stepButtons.forEach(btn => {
+      const s = parseInt(btn.dataset.step, 10);
+      btn.disabled = s > currentMaxStep;
+      btn.classList.toggle("unlocked", s <= currentMaxStep);
+      btn.classList.toggle("active", s === currentMaxStep);
+    });
+    Object.entries(stepCards).forEach(([n, card]) => {
+      const num = parseInt(n, 10);
+      if (num <= currentMaxStep) card.classList.remove("step-disabled");
+      else card.classList.add("step-disabled");
+    });
+  }
 
-// ---------------------- Signature pad ----------------------
-function initSignaturePad() {
-  const canvas  = $("#signature-pad");
-  const clearBtn= $("#clear-signature-btn");
-  if (!canvas || !clearBtn) return;
+  function unlockStep(step) {
+    if (step > currentMaxStep) {
+      currentMaxStep = step;
+      updateStepAccess();
+    }
+  }
 
-  const ctx = canvas.getContext("2d");
+  stepButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const s = parseInt(btn.dataset.step, 10);
+      if (s > currentMaxStep) return;
+      const card = stepCards[s];
+      if (card) {
+        card.scrollIntoView({ behavior: "smooth", block: "start" });
+        stepButtons.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+      }
+    });
+  });
+
+  updateStepAccess();
+
+  /* ========= DATA CONFIG ========= */
+
+  // Exposé data (will be filled by fake Berlin or future PDF wizard)
+  const EXPOSE_DATA = {
+    adresse: "",
+    objekttyp: "",
+    baujahr: "",
+    wohnflaeche: "",
+    grundstueck: "",
+    etage: "",
+    vollgeschosse: "",
+    keller: "",
+    fassade_daemmung: "",
+    dachgeschoss: "",
+    straenge: "",
+    fenster_material: "",
+    fenster_verglas: "",
+    baujahr_fenster: "",
+    heizung: "",
+    baujahr_heizung: "",
+    warmwasser: ""
+  };
+
+  // Mandatory fields for Reality column
+  const MANDATORY_FIELDS = ["adresse", "wohnflaeche", "keller"];
+
+  // "Template" table structure
+  const inspectionFields = [
+    { id: "adresse",          label: "Adresse",                      type: "text" },
+    { id: "objekttyp",        label: "Objekttyp",                    type: "select",
+      options: ["Etagenwohnung","Wohnung","Einfamilienhaus","Gewerbe","MFH"] },
+    { id: "baujahr",          label: "Baujahr",                      type: "text" },
+    { id: "wohnflaeche",      label: "Wohnfläche",                   type: "text" },
+    { id: "grundstueck",      label: "bei Haus Grundstücksfläche",   type: "text" },
+    { id: "etage",            label: "Etage",                        type: "text" },
+    { id: "vollgeschosse",    label: "wieviele Vollgeschosse",       type: "text" },
+    { id: "keller",           label: "Keller",                       type: "text" }, // mandatory
+    { id: "fassade_daemmung", label: "Fassade – Dämmung",            type: "select",
+      options: ["unbekannt","Dämmung","keine Dämmung"] },
+    { id: "dachgeschoss",     label: "Dachgeschoss",                 type: "select",
+      options: ["unbekannt","ausgebaut","nicht ausgebaut","Flachdach"] },
+    { id: "straenge",         label: "Stränge erneuert",             type: "select",
+      options: ["unbekannt","Ja","Nein"] },
+    { id: "fenster_material", label: "Fenster Material",             type: "select",
+      options: ["unbekannt","Holz","Kunststoff","Sonstiges"] },
+    { id: "fenster_verglas",  label: "Fenster Verglasung",           type: "select",
+      options: ["unbekannt","Einfach verglast","Doppelt verglast","Sonstiges"] },
+    { id: "baujahr_fenster",  label: "Baujahr Fenster",              type: "text" },
+    { id: "heizung",          label: "Heizung",                      type: "select",
+      options: ["unbekannt","Ofenheizung","Gas-Etagenheizung","Gas-Zentralheizung",
+                "Öl-Zentralheizung","Fernwärme","Fernwärme (Gas)","Sonstiges"] },
+    { id: "baujahr_heizung",  label: "Baujahr Heizung",              type: "text" },
+    { id: "warmwasser",       label: "Warmwasser",                   type: "select",
+      options: ["unbekannt","zentral","zentral (mit Warmwasser)","dezentral"] }
+  ];
+
+  const SAMPLE_NOTES = [
+    "Looks as described, no visible defects.",
+    "Walls freshly painted, minor scratches on floor.",
+    "Windows close properly, no drafts felt.",
+    "Bathroom ventilation needs checking.",
+    "Heating seems older, might require service soon."
+  ];
+
+  /* ========= STEP 1: FILE / EXAMPLE ========= */
+  const dropZone = document.getElementById("drop-zone");
+  const fileInput = document.getElementById("file-input");
+  const fileInfo = document.getElementById("file-info");
+  const selectFileBtn = document.getElementById("select-file-btn");
+  const loadExampleBtn = document.getElementById("load-example-btn");
+
+  let currentFileName = "";
+
+  function handleFiles(files) {
+    if (!files || !files.length) return;
+    const file = files[0];
+    currentFileName = file.name;
+    fileInfo.textContent = `Loaded file: ${file.name}`;
+    // Future: PDF parser will fill EXPOSE_DATA here.
+    // For now: only unlock step 2, but EXPOSE_DATA stays blank until example is used.
+    unlockStep(2);
+  }
+
+  selectFileBtn.addEventListener("click", () => fileInput.click());
+  fileInput.addEventListener("change", e => handleFiles(e.target.files));
+
+  ["dragenter","dragover"].forEach(evt => {
+    dropZone.addEventListener(evt, e => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropZone.classList.add("dragover");
+    });
+  });
+  ["dragleave","drop"].forEach(evt => {
+    dropZone.addEventListener(evt, e => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropZone.classList.remove("dragover");
+    });
+  });
+  dropZone.addEventListener("drop", e => {
+    handleFiles(e.dataTransfer.files);
+  });
+
+  // Fake Berlin exposé fills EXPOSE_DATA + table
+  function fillFakeBerlinExpose() {
+    EXPOSE_DATA.adresse          = "Kantstraße 123, 10625 Berlin";
+    EXPOSE_DATA.objekttyp        = "Etagenwohnung";
+    EXPOSE_DATA.baujahr          = "1960";
+    EXPOSE_DATA.wohnflaeche      = "ca. 67 m²";
+    EXPOSE_DATA.grundstueck      = "";
+    EXPOSE_DATA.etage            = "2";
+    EXPOSE_DATA.vollgeschosse    = "5";
+    EXPOSE_DATA.keller           = "Kellerabteil vorhanden";
+    EXPOSE_DATA.fassade_daemmung = "";
+    EXPOSE_DATA.dachgeschoss     = "";
+    EXPOSE_DATA.straenge         = "";
+    EXPOSE_DATA.fenster_material = "";
+    EXPOSE_DATA.fenster_verglas  = "";
+    EXPOSE_DATA.baujahr_fenster  = "";
+    EXPOSE_DATA.heizung          = "Fernwärme (Gas)";
+    EXPOSE_DATA.baujahr_heizung  = "";
+    EXPOSE_DATA.warmwasser       = "zentral (mit Warmwasser)";
+  }
+
+  loadExampleBtn.addEventListener("click", () => {
+    fillFakeBerlinExpose();
+    fileInfo.textContent = "Using example exposé: Kantstraße 123, 10625 Berlin";
+    buildTable();
+    unlockStep(2);
+    stepCards[2].scrollIntoView({ behavior: "smooth", block: "start" });
+    stepsFloating.querySelector('button[data-step="2"]').classList.add("active");
+  });
+
+  /* ========= STEP 2: TABLE ========= */
+
+  const comparisonBody = document.getElementById("comparison-body");
+  const addTextRowBtn = document.getElementById("add-text-row-btn");
+  const addPhotoRowBtn = document.getElementById("add-photo-row-btn");
+  const resetExampleBtn = document.getElementById("reset-example-btn");
+  const mockAutofillBtn = document.getElementById("mock-autofill-btn");
+  const goStep3Btn = document.getElementById("go-step3-btn");
+
+  function addFieldRow(field) {
+    const tr = document.createElement("tr");
+    tr.dataset.rowType = "field";
+    tr.dataset.fieldId = field.id;
+
+    const isMandatory = MANDATORY_FIELDS.includes(field.id);
+    if (isMandatory) tr.classList.add("mandatory-row");
+
+    // Column 1: field label (+ delete for custom, but not for template mandatory rows)
+    const descTd = document.createElement("td");
+    descTd.dataset.label = "🧾 Field";
+    descTd.textContent = field.label;
+    tr.appendChild(descTd);
+
+    // Column 2: exposé (read-only)
+    const exposeTd = document.createElement("td");
+    exposeTd.className = "expose-cell";
+    exposeTd.dataset.label = "🏢 Exposé";
+    const exposeValue = EXPOSE_DATA[field.id] || "";
+    exposeTd.textContent = exposeValue;
+    tr.appendChild(exposeTd);
+
+    // Column 3: reality (editable)
+    const realityTd = document.createElement("td");
+    realityTd.className = "editable";
+    realityTd.dataset.label = "✅ Reality";
+
+    const copyBtn = document.createElement("button");
+    copyBtn.type = "button";
+    copyBtn.className = "copy-btn";
+    copyBtn.textContent = "Copy from exposé";
+
+    if (field.type === "text") {
+      const span = document.createElement("span");
+      span.className = "cell-editable";
+      span.contentEditable = "true";
+      span.dataset.placeholder = "Write your inspection result…";
+      span.innerHTML = '<span style="opacity:0.35;">Write your inspection result…</span>';
+
+      span.addEventListener("focus", () => {
+        if (span.querySelector("span")) span.textContent = "";
+      });
+
+      copyBtn.addEventListener("click", () => {
+        span.textContent = exposeValue || "";
+      });
+
+      realityTd.appendChild(copyBtn);
+      realityTd.appendChild(span);
+    } else if (field.type === "select") {
+      const select = document.createElement("select");
+      select.style.width = "100%";
+      select.style.padding = "3px 6px";
+      select.style.borderRadius = "10px";
+      select.style.border = "1px solid #dcd3ff";
+
+      const ph = document.createElement("option");
+      ph.value = "";
+      ph.textContent = "Select…";
+      select.appendChild(ph);
+
+      field.options.forEach(o => {
+        const opt = document.createElement("option");
+        opt.value = o;
+        opt.textContent = o;
+        select.appendChild(opt);
+      });
+
+      copyBtn.addEventListener("click", () => {
+        const val = (exposeValue || "").trim();
+        if (!val) return;
+        const opts = Array.from(select.options);
+        let idx = opts.findIndex(o => o.value === val);
+        if (idx === -1) {
+          idx = opts.findIndex(o => val.toLowerCase().includes(o.value.toLowerCase()));
+        }
+        if (idx >= 0) select.selectedIndex = idx;
+      });
+
+      realityTd.appendChild(copyBtn);
+      realityTd.appendChild(select);
+    }
+
+    tr.appendChild(realityTd);
+    comparisonBody.appendChild(tr);
+  }
+
+  function addCustomTextRow() {
+    const tr = document.createElement("tr");
+    tr.dataset.rowType = "custom-text";
+
+    const descTd = document.createElement("td");
+    descTd.dataset.label = "🧾 Field";
+
+    const fieldSpan = document.createElement("span");
+    fieldSpan.className = "cell-editable";
+    fieldSpan.contentEditable = "true";
+    fieldSpan.textContent = "Custom note";
+    descTd.appendChild(fieldSpan);
+
+    const trash = document.createElement("button");
+    trash.type = "button";
+    trash.className = "trash-inline";
+    trash.textContent = "🗑";
+    trash.addEventListener("click", () => {
+      if (confirm("Remove this row?")) tr.remove();
+    });
+    descTd.appendChild(trash);
+
+    const exposeTd = document.createElement("td");
+    exposeTd.dataset.label = "🏢 Exposé";
+    exposeTd.className = "expose-cell";
+    exposeTd.textContent = "";
+
+    const realityTd = document.createElement("td");
+    realityTd.dataset.label = "✅ Reality";
+    realityTd.className = "editable";
+
+    const span = document.createElement("span");
+    span.className = "cell-editable";
+    span.contentEditable = "true";
+    span.innerHTML = '<span style="opacity:0.35;">Write your inspection result…</span>';
+    span.addEventListener("focus", () => {
+      if (span.querySelector("span")) span.textContent = "";
+    });
+    realityTd.appendChild(span);
+
+    tr.appendChild(descTd);
+    tr.appendChild(exposeTd);
+    tr.appendChild(realityTd);
+    comparisonBody.appendChild(tr);
+  }
+
+  /* ===== CAMERA / PHOTO ROW ===== */
+  const cameraModal = document.getElementById("camera-modal");
+  const cameraView = document.getElementById("camera--view");
+  const cameraTrigger = document.getElementById("camera--trigger");
+  const cameraClose = document.getElementById("camera-close");
+  const cameraSensor = document.getElementById("camera--sensor");
+  const cameraOutput = document.getElementById("camera--output");
+  let cameraStream = null;
+  let currentPhotoTargetImg = null;
+
+  async function openCamera(targetImg) {
+    currentPhotoTargetImg = targetImg;
+    cameraModal.classList.add("active");
+    try {
+      cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      cameraView.srcObject = cameraStream;
+    } catch (err) {
+      alert("Camera not available / blocked.");
+      closeCamera();
+    }
+  }
+  function closeCamera() {
+    cameraModal.classList.remove("active");
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(t => t.stop());
+      cameraStream = null;
+    }
+    cameraView.srcObject = null;
+  }
+
+  cameraClose.addEventListener("click", closeCamera);
+  cameraTrigger.addEventListener("click", () => {
+    if (!cameraStream || !currentPhotoTargetImg) return;
+    const trackSettings = cameraStream.getVideoTracks()[0].getSettings();
+    cameraSensor.width = trackSettings.width || 640;
+    cameraSensor.height = trackSettings.height || 480;
+    const ctx = cameraSensor.getContext("2d");
+    ctx.drawImage(cameraView, 0, 0, cameraSensor.width, cameraSensor.height);
+    const dataURL = cameraSensor.toDataURL("image/jpeg");
+    currentPhotoTargetImg.src = dataURL;
+    currentPhotoTargetImg.style.display = "block";
+    closeCamera();
+  });
+
+  function addPhotoRow() {
+    const tr = document.createElement("tr");
+    tr.dataset.rowType = "photo";
+
+    const descTd = document.createElement("td");
+    descTd.dataset.label = "🧾 Field";
+    descTd.textContent = "Photo / comment";
+
+    const trash = document.createElement("button");
+    trash.type = "button";
+    trash.className = "trash-inline";
+    trash.textContent = "🗑";
+    trash.addEventListener("click", () => {
+      if (confirm("Remove this photo row?")) tr.remove();
+    });
+    descTd.appendChild(trash);
+
+    const exposeTd = document.createElement("td");
+    exposeTd.dataset.label = "🏢 Exposé";
+    exposeTd.className = "expose-cell";
+    exposeTd.textContent = "";
+
+    const realityTd = document.createElement("td");
+    realityTd.dataset.label = "✅ Reality";
+    realityTd.className = "editable";
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "photo-wrapper";
+
+    const img = document.createElement("img");
+    img.className = "photo-preview";
+    img.style.display = "none";
+
+    const actions = document.createElement("div");
+    actions.className = "photo-actions";
+
+    const uploadBtn = document.createElement("button");
+    uploadBtn.type = "button";
+    uploadBtn.textContent = "Upload photo";
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = "image/*";
+    fileInput.style.display = "none";
+    uploadBtn.addEventListener("click", () => fileInput.click());
+    fileInput.addEventListener("change", e => {
+      const f = e.target.files[0];
+      if (!f) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        img.src = ev.target.result;
+        img.style.display = "block";
+      };
+      reader.readAsDataURL(f);
+    });
+
+    const cameraBtn = document.createElement("button");
+    cameraBtn.type = "button";
+    cameraBtn.textContent = "Use camera";
+    cameraBtn.addEventListener("click", () => openCamera(img));
+
+    actions.appendChild(uploadBtn);
+    actions.appendChild(cameraBtn);
+    actions.appendChild(fileInput);
+
+    const textarea = document.createElement("textarea");
+    textarea.className = "photo-comment";
+    textarea.placeholder = "Comment (optional)…";
+
+    wrapper.appendChild(img);
+    wrapper.appendChild(actions);
+    wrapper.appendChild(textarea);
+    realityTd.appendChild(wrapper);
+
+    tr.appendChild(descTd);
+    tr.appendChild(exposeTd);
+    tr.appendChild(realityTd);
+    comparisonBody.appendChild(tr);
+  }
+
+  function buildTable() {
+    comparisonBody.innerHTML = "";
+    inspectionFields.forEach(addFieldRow);
+  }
+
+  addTextRowBtn.addEventListener("click", addCustomTextRow);
+  addPhotoRowBtn.addEventListener("click", addPhotoRow);
+
+  resetExampleBtn.addEventListener("click", () => {
+    if (!confirm("Reset to template rows & fake Berlin exposé?")) return;
+    fillFakeBerlinExpose();
+    buildTable();
+  });
+
+  mockAutofillBtn.addEventListener("click", () => {
+    const spans = comparisonBody.querySelectorAll("tr[data-row-type='field'] td.editable .cell-editable");
+    spans.forEach((span, idx) => {
+      const note = SAMPLE_NOTES[idx % SAMPLE_NOTES.length];
+      span.textContent = note;
+    });
+  });
+
+  function validateMandatoryFields() {
+    let ok = true;
+    comparisonBody.querySelectorAll("tr.mandatory-row").forEach(tr => {
+      const realityCell = tr.querySelector("td.editable");
+      if (!realityCell) return;
+      let hasValue = false;
+      const span = realityCell.querySelector(".cell-editable");
+      const select = realityCell.querySelector("select");
+      if (span) {
+        const txt = span.textContent.replace(/\s+/g, " ").trim();
+        if (txt && txt !== "Write your inspection result…") hasValue = true;
+      }
+      if (select) {
+        if (select.value && select.value.trim() !== "") hasValue = true;
+      }
+
+      tr.classList.remove("row-error");
+      realityCell.classList.remove("field-error");
+      if (!hasValue) {
+        ok = false;
+        tr.classList.add("row-error");
+        realityCell.classList.add("field-error");
+      }
+    });
+    return ok;
+  }
+
+  goStep3Btn.addEventListener("click", () => {
+    if (!validateMandatoryFields()) {
+      const firstError = comparisonBody.querySelector(".row-error");
+      if (firstError) firstError.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    unlockStep(3);
+    stepCards[3].scrollIntoView({ behavior: "smooth", block: "start" });
+    stepsFloating.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+    stepsFloating.querySelector('button[data-step="3"]').classList.add("active");
+  });
+
+  /* ========= STEP 3: SIGNATURE ========= */
+  const signatureCanvas = document.getElementById("signature-pad");
+  const clearSigBtn = document.getElementById("clear-signature-btn");
+  const validatorInput = document.getElementById("validator");
+
+  function resizeSignatureCanvas() {
+    const rect = signatureCanvas.getBoundingClientRect();
+    const ratio = window.devicePixelRatio || 1;
+    signatureCanvas.width = rect.width * ratio;
+    signatureCanvas.height = rect.height * ratio;
+    const ctx = signatureCanvas.getContext("2d");
+    ctx.scale(ratio, ratio);
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#22123f";
+    ctx.fillStyle = "#fdfcff";
+    ctx.fillRect(0, 0, rect.width, rect.height);
+  }
+  resizeSignatureCanvas();
+  window.addEventListener("resize", resizeSignatureCanvas);
+
   let drawing = false;
-  let lastX   = 0;
-  let lastY   = 0;
+  let lastX = 0;
+  let lastY = 0;
 
-  const resizeCanvas = () => {
-    const rect    = canvas.getBoundingClientRect();
-    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    canvas.width  = rect.width || 600;
-    canvas.height = 200;
-    ctx.putImageData(imgData, 0, 0);
-  };
+  function getPos(e) {
+    const rect = signatureCanvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return {
+      x: clientX - rect.left,
+      y: clientY - rect.top
+    };
+  }
 
-  canvas.width  = canvas.offsetWidth || 600;
-  canvas.height = 200;
-
-  const startDraw = (x, y) => {
+  function startDraw(e) {
+    e.preventDefault();
     drawing = true;
-    lastX   = x;
-    lastY   = y;
-  };
+    const { x, y } = getPos(e);
+    lastX = x; lastY = y;
+  }
 
-  const moveDraw = (x, y) => {
+  function draw(e) {
     if (!drawing) return;
-    ctx.lineWidth   = 2;
-    ctx.lineCap     = "round";
+    e.preventDefault();
+    const { x, y } = getPos(e);
+    const ctx = signatureCanvas.getContext("2d");
     ctx.beginPath();
     ctx.moveTo(lastX, lastY);
     ctx.lineTo(x, y);
     ctx.stroke();
     lastX = x;
     lastY = y;
-  };
-
-  const stopDraw = () => {
-    drawing = false;
-  };
-
-  // Mouse
-  canvas.addEventListener("mousedown", (e) =>
-    startDraw(e.offsetX, e.offsetY)
-  );
-  canvas.addEventListener("mousemove", (e) =>
-    moveDraw(e.offsetX, e.offsetY)
-  );
-  canvas.addEventListener("mouseup", stopDraw);
-  canvas.addEventListener("mouseleave", stopDraw);
-
-  // Touch
-  canvas.addEventListener(
-    "touchstart",
-    (e) => {
-      const rect = canvas.getBoundingClientRect();
-      const t    = e.touches[0];
-      startDraw(t.clientX - rect.left, t.clientY - rect.top);
-      e.preventDefault();
-    },
-    { passive: false }
-  );
-  canvas.addEventListener(
-    "touchmove",
-    (e) => {
-      const rect = canvas.getBoundingClientRect();
-      const t    = e.touches[0];
-      moveDraw(t.clientX - rect.left, t.clientY - rect.top);
-      e.preventDefault();
-    },
-    { passive: false }
-  );
-  canvas.addEventListener(
-    "touchend",
-    (e) => {
-      stopDraw();
-      e.preventDefault();
-    },
-    { passive: false }
-  );
-
-  clearBtn.addEventListener("click", () => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-  });
-
-  window.addEventListener("resize", resizeCanvas);
-}
-
-// ---------------------- PDF modal + jsPDF ----------------------
-function initPdfModal() {
-  const generateBtn     = $("#generate-pdf-btn");
-  const modalBackdrop   = $("#pdf-modal-backdrop");
-  const closeBtn        = $("#close-modal-btn");
-  const cancelBtn       = $("#cancel-download-btn");
-  const approveBtn      = $("#approve-download-btn");
-  const validatorInput  = $("#validator");
-  const validatorLabel  = $("#modal-validator-label");
-  const validatorFooter = $("#modal-validator-footer");
-  const iframe          = $("#pdf-preview-frame");
-
-  if (!generateBtn || !modalBackdrop || !iframe) return;
-
-  const openModal = () => {
-    const validatorName = validatorInput?.value.trim();
-    if (!validatorName) {
-      alert("Please enter a validator name.");
-      return;
-    }
-
-    if (validatorLabel) validatorLabel.textContent = validatorName;
-    if (validatorFooter)
-      validatorFooter.textContent = `Validator: ${validatorName}`;
-
-    const pdfDoc = buildPdfDocument(validatorName);
-    currentPdfDoc = pdfDoc;
-
-    const blobUrl = pdfDoc.output("bloburl");
-    iframe.src = blobUrl;
-
-    modalBackdrop.classList.add("open");
-  };
-
-  const closeModal = () => {
-    modalBackdrop.classList.remove("open");
-    iframe.src = "about:blank";
-    currentPdfDoc = null;
-  };
-
-  generateBtn.addEventListener("click", openModal);
-  closeBtn?.addEventListener("click", closeModal);
-  cancelBtn?.addEventListener("click", closeModal);
-
-  approveBtn?.addEventListener("click", () => {
-    if (!currentPdfDoc) {
-      alert("No PDF generated.");
-      return;
-    }
-    const validatorName = validatorInput?.value.trim() || "inspector";
-    const address       = exposeData.adresse || "Unknown address";
-    const filename      =
-      "CheckYourFlat_" +
-      address.replace(/\s+/g, "_") +
-      "_" +
-      validatorName.replace(/\s+/g, "_") +
-      ".pdf";
-
-    currentPdfDoc.save(filename);
-
-    addEntryToHistory({
-      validator: validatorName,
-      address,
-      date: new Date().toISOString(),
-    });
-    renderHistory();
-
-    closeModal();
-  });
-}
-
-function buildPdfDocument(validatorName) {
-  const { jsPDF } = window.jspdf || {};
-  if (!jsPDF) {
-    alert("jsPDF not loaded.");
-    throw new Error("jsPDF missing");
   }
 
-  const doc = new jsPDF();
-  const now = new Date();
-  const address = exposeData.adresse || "Unknown address";
+  function endDraw(e) {
+    if (!drawing) return;
+    e.preventDefault();
+    drawing = false;
+  }
 
-  let y = 20;
-  doc.setFontSize(16);
-  doc.text("Check Your Flat – Inspection Report", 10, y);
-  y += 8;
+  signatureCanvas.addEventListener("mousedown", startDraw);
+  signatureCanvas.addEventListener("mousemove", draw);
+  signatureCanvas.addEventListener("mouseup", endDraw);
+  signatureCanvas.addEventListener("mouseleave", endDraw);
+  signatureCanvas.addEventListener("touchstart", startDraw, { passive: false });
+  signatureCanvas.addEventListener("touchmove", draw, { passive: false });
+  signatureCanvas.addEventListener("touchend", endDraw, { passive: false });
 
-  doc.setFontSize(11);
-  doc.text(`Address: ${address}`, 10, y);
-  y += 6;
-  doc.text(`Validator: ${validatorName}`, 10, y);
-  y += 6;
-  doc.text(`Date: ${now.toLocaleString()}`, 10, y);
-  y += 10;
+  clearSigBtn.addEventListener("click", () => {
+    resizeSignatureCanvas();
+  });
 
-  doc.setFontSize(12);
-  doc.text("Summary of fields:", 10, y);
-  y += 6;
+  /* ========= PDF GENERATION & MODAL ========= */
+  const generateBtn = document.getElementById("generate-pdf-btn");
+  const modalBackdrop = document.getElementById("pdf-modal-backdrop");
+  const pdfFrame = document.getElementById("pdf-preview-frame");
+  const closeModalBtn = document.getElementById("close-modal-btn");
+  const cancelDownloadBtn = document.getElementById("cancel-download-btn");
+  const approveDownloadBtn = document.getElementById("approve-download-btn");
+  const modalValidatorLabel = document.getElementById("modal-validator-label");
+  const modalValidatorFooter = document.getElementById("modal-validator-footer");
 
-  const tbody = $("#comparison-body");
-  if (tbody) {
-    const rows = Array.from(tbody.querySelectorAll("tr"));
-    doc.setFontSize(10);
+  let lastPdfBlob = null;
+  let lastPdfFilename = null;
+  let lastValidatorName = "";
+  let logoImageData = null;
 
-    rows.forEach((row) => {
+  // Try loading Logo.png for header (optional)
+  (function loadLogo() {
+    const img = new Image();
+    img.crossOrigin = "Anonymous";
+    img.onload = function () {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+      logoImageData = canvas.toDataURL("image/png");
+    };
+    img.onerror = function () {
+      logoImageData = null;
+    };
+    img.src = "Logo.png";
+  })();
+
+  function clearValidationErrors() {
+    validatorInput.classList.remove("field-error");
+    comparisonBody.querySelectorAll("tr.mandatory-row").forEach(tr => {
+      tr.classList.remove("row-error");
+      const cell = tr.querySelector("td.editable");
+      if (cell) cell.classList.remove("field-error");
+    });
+  }
+
+  generateBtn.addEventListener("click", () => {
+    clearValidationErrors();
+    let hasError = false;
+
+    const validator = validatorInput.value.trim();
+    if (!validator) {
+      hasError = true;
+      validatorInput.classList.add("field-error");
+      validatorInput.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    if (!validateMandatoryFields()) {
+      hasError = true;
+    }
+
+    if (hasError) return;
+
+    const now = new Date();
+    const timeStr = String(now.getHours()).padStart(2, "0") + String(now.getMinutes()).padStart(2, "0");
+    const baseName = (EXPOSE_DATA.adresse || "Flat").replace(/[^\w]+/g, "_") || "Flat";
+    lastPdfFilename = baseName + "_" + timeStr + ".pdf";
+    lastValidatorName = validator;
+
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+
+    // HEADER
+    doc.setFillColor(30, 12, 60);
+    doc.rect(0, 0, 210, 25, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("Check Your Flat", 12, 12);
+    doc.setFontSize(15);
+    doc.text("Inspection report", 12, 20);
+
+    if (logoImageData) {
+      doc.addImage(logoImageData, "PNG", 178, 4, 24, 17);
+    } else {
+      doc.setDrawColor(255, 184, 92);
+      doc.circle(188, 12, 8);
+      doc.setFontSize(9);
+      doc.text("CYF", 184.5, 14);
+    }
+
+    // META
+    doc.setTextColor(20, 12, 40);
+    doc.setFontSize(11);
+    let metaY = 38;
+
+    function addMeta(label, value) {
+      if (!value) return;
+      doc.setFont("helvetica", "bold");
+      doc.text(label, 12, metaY);
+      doc.setFont("helvetica", "normal");
+      doc.text(value, 20, metaY + 5);
+      metaY += 11;
+    }
+
+    const dateStr = now.toLocaleString();
+    const addressLine = EXPOSE_DATA.adresse || "";
+
+    addMeta("Address:", addressLine);
+    addMeta("Generated:", dateStr);
+    if (currentFileName) addMeta("Source exposé:", currentFileName);
+    addMeta("Validator (inspector):", validator);
+
+    metaY += 4;
+
+    // TABLE HEADING
+    doc.setFontSize(12);
+    doc.setTextColor(30, 12, 60);
+    doc.setFont("helvetica", "bold");
+    doc.text("Maske Inspektion – inspector notes", 12, metaY);
+    doc.setLineWidth(0.3);
+    doc.setDrawColor(180, 170, 230);
+    doc.line(12, metaY + 2, 198, metaY + 2);
+
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(30, 20, 60);
+    let y = metaY + 9;
+    const lineHeight = 5;
+
+    // Collect rows
+    const rows = [];
+    comparisonBody.querySelectorAll("tr").forEach(tr => {
+      const type = tr.dataset.rowType || "field";
+      const cells = tr.querySelectorAll("td");
+
+      let desc = "";
+      if (cells[0]) {
+        const firstNode = cells[0].childNodes[0];
+        desc = (firstNode && firstNode.textContent ? firstNode.textContent : "").trim();
+      }
+
+      let reality = "";
+      let photoData = null;
+
+      if (type === "photo") {
+        const img = tr.querySelector(".photo-preview");
+        const textarea = tr.querySelector(".photo-comment");
+        if (textarea) reality = (textarea.value || "").trim();
+        if (img && img.src && img.style.display !== "none") {
+          photoData = img.src;
+        }
+      } else {
+        const span = tr.querySelector("td.editable .cell-editable");
+        const select = tr.querySelector("td.editable select");
+        if (span) reality = (span.textContent || "").replace(/\s+/g, " ").trim();
+        if (select && select.value) {
+          reality = select.value;
+        }
+      }
+
+      if (!desc && !reality && !photoData) return;
+      rows.push({ type, desc, reality, photoData });
+    });
+
+    rows.forEach(row => {
       if (y > 270) {
         doc.addPage();
         y = 20;
       }
 
-      const rawLabel = (row.querySelector("td:first-child")?.textContent || "").trim();
-      const label = rawLabel.replace(/\s*\*$/, ""); // remove trailing *
+      doc.setFont("helvetica", "bold");
+      doc.text("• " + row.desc, 12, y);
+      y += lineHeight;
 
-      const exposeVal =
-        row.querySelector(".expose-input")?.value?.trim() || "";
-      const realityVal =
-        row.querySelector(".reality-input")?.value?.trim() || "";
-
-      if (row.classList.contains("row-photo")) {
-        doc.text(`Field: ${label || "Photo"}`, 10, y);
-        y += 5;
-        doc.text(`Photo attached (see app screenshot)`, 10, y);
-        y += 7;
-      } else {
-        doc.text(`Field: ${label}`, 10, y);
-        y += 4;
-        if (exposeVal) {
-          doc.text(`Exposé: ${exposeVal}`, 10, y);
-          y += 4;
-        }
-        if (realityVal) {
-          doc.text(`Reality: ${realityVal}`, 10, y);
-          y += 5;
-        } else {
-          y += 3;
-        }
-        y += 2;
+      if (row.reality) {
+        doc.setFont("helvetica", "normal");
+        const textLines = doc.splitTextToSize(row.reality, 180);
+        doc.text(textLines, 18, y);
+        y += lineHeight + (textLines.length - 1) * lineHeight;
       }
+
+      if (row.photoData) {
+        const imgWidth = 60;
+        const imgHeight = 45;
+        if (y + imgHeight > 270) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.addImage(row.photoData, "JPEG", 18, y, imgWidth, imgHeight);
+        y += imgHeight + lineHeight;
+      }
+    });
+
+    // Signature
+    const sigData = signatureCanvas.toDataURL("image/png");
+    if (sigData) {
+      if (y + 30 > 270) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.setFont("helvetica", "bold");
+      doc.text("Signature:", 12, y);
+      doc.addImage(sigData, "PNG", 40, y - 10, 40, 20);
+      y += 26;
+    }
+
+    const pdfBlob = doc.output("blob");
+    lastPdfBlob = pdfBlob;
+
+    const url = URL.createObjectURL(pdfBlob);
+    pdfFrame.src = url;
+    modalValidatorLabel.textContent = validator;
+    modalValidatorFooter.textContent = "Check the PDF. If OK, approve & download.";
+    modalBackdrop.classList.add("visible");
+  });
+
+  function closeModal() {
+    modalBackdrop.classList.remove("visible");
+    pdfFrame.src = "";
+    if (lastPdfBlob) {
+      URL.revokeObjectURL(lastPdfBlob);
+      lastPdfBlob = null;
+    }
+  }
+
+  closeModalBtn.addEventListener("click", closeModal);
+  cancelDownloadBtn.addEventListener("click", closeModal);
+
+  approveDownloadBtn.addEventListener("click", () => {
+    if (!lastPdfBlob || !lastPdfFilename) return;
+    const url = URL.createObjectURL(lastPdfBlob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = lastPdfFilename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    saveHistoryEntry({
+      filename: lastPdfFilename,
+      when: new Date().toLocaleString(),
+      address: EXPOSE_DATA.adresse || "",
+      validator: lastValidatorName || ""
+    });
+
+    closeModal();
+    renderHistory();
+  });
+
+  /* ========= HISTORY ========= */
+  const HISTORY_KEY = "cyf-history-v3";
+  const historyListEl = document.getElementById("history-list");
+
+  function loadHistory() {
+    try {
+      const raw = localStorage.getItem(HISTORY_KEY);
+      if (!raw) return [];
+      return JSON.parse(raw);
+    } catch {
+      return [];
+    }
+  }
+
+  function saveHistoryEntry(entry) {
+    const list = loadHistory();
+    list.unshift(entry);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(list.slice(0, 40)));
+  }
+
+  function renderHistory() {
+    const list = loadHistory();
+    historyListEl.innerHTML = "";
+    if (!list.length) {
+      const p = document.createElement("p");
+      p.style.fontSize = "11px";
+      p.style.color = "#7a719d";
+      p.textContent = "No reports exported yet.";
+      historyListEl.appendChild(p);
+      return;
+    }
+    list.forEach(item => {
+      const div = document.createElement("div");
+      div.className = "history-item";
+
+      const main = document.createElement("div");
+      main.className = "history-main";
+
+      const title = document.createElement("div");
+      title.textContent = item.filename;
+
+      const meta = document.createElement("div");
+      meta.className = "history-meta";
+      meta.textContent = (item.address || "") + " • " + item.when +
+        (item.validator ? " • " + item.validator : "");
+
+      main.appendChild(title);
+      main.appendChild(meta);
+
+      const tag = document.createElement("span");
+      tag.className = "history-tag";
+      tag.textContent = "PDF";
+
+      div.appendChild(main);
+      div.appendChild(tag);
+      historyListEl.appendChild(div);
     });
   }
 
-  const canvas = $("#signature-pad");
-  if (canvas) {
-    const imgData = canvas.toDataURL("image/png");
-    doc.addPage();
-    doc.setFontSize(14);
-    doc.text("Signature", 10, 20);
-    doc.addImage(imgData, "PNG", 10, 25, 80, 30);
-    doc.setFontSize(10);
-    doc.text(`Validator: ${validatorName}`, 10, 65);
-  }
-
-  return doc;
-}
-
-// ---------------------- Camera modal ----------------------
-function initCameraModal() {
-  const cameraModal = $("#camera-modal");
-  const closeBtn    = $("#camera-close");
-  const triggerBtn  = $("#camera--trigger");
-  const view        = $("#camera--view");
-  const sensor      = $("#camera--sensor");
-  const output      = $("#camera--output");
-
-  if (!cameraModal || !closeBtn || !triggerBtn || !view || !sensor || !output)
-    return;
-
-  let stream = null;
-
-  async function openCamera() {
-    cameraModal.classList.add("open");
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      view.srcObject = stream;
-    } catch (err) {
-      console.error(err);
-      alert("Unable to access camera.");
-      closeCamera();
-    }
-  }
-
-  function closeCamera() {
-    cameraModal.classList.remove("open");
-    if (stream) {
-      stream.getTracks().forEach((t) => t.stop());
-      stream = null;
-    }
-  }
-
-  triggerBtn.addEventListener("click", () => {
-    const ctx = sensor.getContext("2d");
-    sensor.width  = view.videoWidth;
-    sensor.height = view.videoHeight;
-    ctx.drawImage(view, 0, 0);
-    const dataUrl = sensor.toDataURL("image/png");
-    output.src = dataUrl;
-    output.style.display = "block";
-
-    if (currentPhotoRow) {
-      const img = currentPhotoRow.querySelector("td:nth-child(3) img");
-      if (img) img.src = dataUrl;
-    }
-    closeCamera();
-  });
-
-  closeBtn.addEventListener("click", () => {
-    closeCamera();
-  });
-
-  window.__openCameraModal = openCamera;
-}
-
-function openCameraForRow(row) {
-  currentPhotoRow = row;
-  if (window.__openCameraModal) {
-    window.__openCameraModal();
-  } else {
-    alert("Camera not available.");
-  }
-}
-
-// ---------------------- History ----------------------
-function initHistory() {
   renderHistory();
-}
-
-function getHistory() {
-  try {
-    const raw = localStorage.getItem(HISTORY_KEY);
-    if (!raw) return [];
-    const arr = JSON.parse(raw);
-    if (!Array.isArray(arr)) return [];
-    return arr;
-  } catch {
-    return [];
-  }
-}
-
-function saveHistory(list) {
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
-}
-
-function addEntryToHistory(entry) {
-  const list = getHistory();
-  list.unshift(entry);
-  saveHistory(list);
-}
-
-function renderHistory() {
-  const container = $("#history-list");
-  if (!container) return;
-
-  const list = getHistory();
-  if (!list.length) {
-    container.innerHTML =
-      '<p style="font-size:14px;color:#777;">No previous inspections saved yet.</p>';
-    return;
-  }
-
-  container.innerHTML = "";
-  list.forEach((item) => {
-    const div = document.createElement("div");
-    div.style.border       = "1px solid #eee";
-    div.style.borderRadius = "10px";
-    div.style.padding      = "8px 10px";
-    div.style.marginBottom = "8px";
-    div.style.fontSize     = "13px";
-
-    const date = new Date(item.date);
-    const dateStr = isNaN(date.getTime())
-      ? item.date
-      : date.toLocaleString();
-
-    div.innerHTML = `
-      <div style="font-weight:600;">${item.address || "Unknown address"}</div>
-      <div>Validator: ${item.validator || "Unknown"}</div>
-      <div style="color:#666;">${dateStr}</div>
-    `;
-    container.appendChild(div);
-  });
-}
+})();
