@@ -65,15 +65,28 @@ async function loadDataFiles() {
 function parseExposeText(text) {
   const lines = text.split("\n");
   const obj = {};
+
   for (const line of lines) {
     const trimmed = line.trim();
-    if (!trimmed) continue;
-    const [key, ...rest] = trimmed.split("=");
-    const value = rest.join("=").trim();
-    obj[key.trim()] = value;
+    if (!trimmed || !trimmed.includes("=")) continue;
+
+    const [rawKey, ...rest] = trimmed.split("=");
+    const key = rawKey.trim();
+    const rawValue = rest.join("=").trim();
+
+    // Handle empty, missing, or literal "null"
+    const value =
+      rawValue === "" ||
+      rawValue.toLowerCase() === "null"
+        ? null
+        : rawValue;
+
+    obj[key] = value;
   }
+
   return obj;
 }
+
 
 // ---------- Sidebar + view switching ----------
 function initSidebar() {
