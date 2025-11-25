@@ -430,13 +430,46 @@
     closeCamera();
   });
 
-  function addPhotoRow(label) {
+function addPhotoRow(label) {
   const tr = document.createElement("tr");
   tr.dataset.rowType = "photo";
+  tr.classList.add("custom-row-highlight");
 
+  // Column 1: editable title + delete
   const descTd = document.createElement("td");
   descTd.dataset.label = "🧾 Field";
-  descTd.textContent = label || "Photo / comment";
+
+  const labelSpan = document.createElement("span");
+  labelSpan.className = "row-title-editable placeholder";
+  labelSpan.contentEditable = "true";
+  labelSpan.textContent = label || "Tap to name this row";
+
+  function normalizeTitle() {
+    const txt = labelSpan.textContent.replace(/\s+/g, " ").trim();
+    if (!txt) {
+      labelSpan.textContent = "Tap to name this row";
+      labelSpan.classList.add("placeholder");
+    } else {
+      labelSpan.textContent = txt;
+      labelSpan.classList.remove("placeholder");
+    }
+  }
+
+  labelSpan.addEventListener("focus", () => {
+    if (labelSpan.classList.contains("placeholder")) {
+      labelSpan.textContent = "";
+    }
+  });
+
+  labelSpan.addEventListener("blur", normalizeTitle);
+  labelSpan.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      labelSpan.blur();
+    }
+  });
+
+  descTd.appendChild(labelSpan);
 
   const trash = document.createElement("button");
   trash.type = "button";
@@ -447,11 +480,15 @@
   });
   descTd.appendChild(trash);
 
+  // Column 2: exposé (empty)
   const exposeTd = document.createElement("td");
   exposeTd.dataset.label = "🏢 Exposé";
   exposeTd.className = "expose-cell";
   exposeTd.textContent = "";
+  tr.appendChild(descTd);
+  tr.appendChild(exposeTd);
 
+  // Column 3: photo + comment (same as your existing logic)
   const realityTd = document.createElement("td");
   realityTd.dataset.label = "✅ Reality";
   realityTd.className = "editable";
@@ -503,24 +540,12 @@
   wrapper.appendChild(textarea);
   realityTd.appendChild(wrapper);
 
-  tr.appendChild(descTd);
-  tr.appendChild(exposeTd);
   tr.appendChild(realityTd);
   comparisonBody.appendChild(tr);
+
+  return tr;
 }
 
-
-  function buildTable() {
-    comparisonBody.innerHTML = "";
-    inspectionFields.forEach(addFieldRow);
-  }
-
-addTextRowBtn.addEventListener("click", () => {
-  const field = {
-    id: "custom_" + Date.now(),
-    label: "",   // start blank → placeholder will show
-    type: "text"
-  };
 
   const tr = addFieldRow(field);
   if (!tr) return;
@@ -541,7 +566,23 @@ addTextRowBtn.addEventListener("click", () => {
   tr.scrollIntoView({ behavior: "smooth", block: "center" });
 });
 
-  addPhotoRowBtn.addEventListener("click", addPhotoRow);
+addPhotoRowBtn.addEventListener("click", () => {
+  const label = "";  // start blank, use placeholder
+  const tr = addPhotoRow(label);
+  if (!tr) return;
+
+  const titleEl = tr.querySelector(".row-title-editable");
+  if (titleEl) {
+    titleEl.focus();
+    const range = document.createRange();
+    range.selectNodeContents(titleEl);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+
+  tr.scrollIntoView({ behavior: "smooth", block: "center" });
+});
 
   resetExampleBtn.addEventListener("click", () => {
     if (!confirm("Reset to template rows & fake Berlin exposé?")) return;
