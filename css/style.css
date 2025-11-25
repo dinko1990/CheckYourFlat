@@ -63,8 +63,9 @@ body {
   font-size: 11px;
   opacity: 0.7;
 }
-.sidebar.collapsed .brand-text { display: none; }
-
+.sidebar.collapsed nav .nav-item span:not(.icon) {
+  display: none; /* hide label text */
+}
 .sidebar-toggle {
   position: absolute;
   top: 16px;
@@ -191,9 +192,10 @@ body {
   top: 10px;
   z-index: 15;
   display: flex;
-  justify-content: flex-end;
+  justify-content: center; /* center instead of right */
   margin-bottom: 10px;
 }
+
 .steps-inner {
   display: inline-flex;
   padding: 4px;
