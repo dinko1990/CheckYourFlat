@@ -122,7 +122,7 @@ body {
   transform: translateY(-1px);
 }
 .nav-item.active {
-  background: linear-gradient(135deg, #7d5cff, #ff6b6b);
+  background: linear-gradient(135deg, #ffc977, #ff88ae);
   color: #fff;
 }
 .nav-logout {
