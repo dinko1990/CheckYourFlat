@@ -1,18 +1,93 @@
 // js/main.js
+// Version with NO fetch() – works from file://
 
-// ---------- Small helpers ----------
-const $ = (sel) => document.querySelector(sel);
+// ---------------------- DATA (inlined instead of .txt files) ----------------------
+
+// Template for exposé / inspection fields (your original array)
+const inspectionFields = [
+  { id: "adresse",          label: "Adresse",                      type: "text" },
+  { id: "objekttyp",        label: "Objekttyp",                    type: "select",
+    options: ["Etagenwohnung","Wohnung","Einfamilienhaus","Gewerbe","MFH"] },
+  { id: "baujahr",          label: "Baujahr",                      type: "text" },
+  { id: "wohnflaeche",      label: "Wohnfläche",                   type: "text" },
+  { id: "grundstueck",      label: "bei Haus Grundstücksfläche",   type: "text" },
+  { id: "etage",            label: "Etage",                        type: "text" },
+  { id: "vollgeschosse",    label: "wieviele Vollgeschosse",       type: "text" },
+  { id: "keller",           label: "Keller",                       type: "text" }, // mandatory via list
+  { id: "fassade_daemmung", label: "Fassade – Dämmung",            type: "select",
+    options: ["unbekannt","Dämmung","keine Dämmung"] },
+  { id: "dachgeschoss",     label: "Dachgeschoss",                 type: "select",
+    options: ["unbekannt","ausgebaut","nicht ausgebaut","Flachdach"] },
+  { id: "straenge",         label: "Stränge erneuert",             type: "select",
+    options: ["unbekannt","Ja","Nein"] },
+  { id: "fenster_material", label: "Fenster Material",             type: "select",
+    options: ["unbekannt","Holz","Kunststoff","Sonstiges"] },
+  { id: "fenster_verglas",  label: "Fenster Verglasung",           type: "select",
+    options: ["unbekannt","Einfach verglast","Doppelt verglast","Sonstiges"] },
+  { id: "baujahr_fenster",  label: "Baujahr Fenster",              type: "text" },
+  { id: "heizung",          label: "Heizung",                      type: "select",
+    options: ["unbekannt","Ofenheizung","Gas-Etagenheizung","Gas-Zentralheizung",
+              "Öl-Zentralheizung","Fernwärme","Fernwärme (Gas)","Sonstiges"] },
+  { id: "baujahr_heizung",  label: "Baujahr Heizung",              type: "text" },
+  { id: "warmwasser",       label: "Warmwasser",                   type: "select",
+    options: ["unbekannt","zentral","zentral (mit Warmwasser)","dezentral"] }
+];
+
+// Example exposé (what was in expose.txt)
+const exposeData = {
+  adresse:          "Kantstraße 123, 10625 Berlin",
+  objekttyp:        "Etagenwohnung",
+  baujahr:          "1960",
+  wohnflaeche:      "ca. 67 m²",
+  grundstueck:      null,
+  etage:            "2",
+  vollgeschosse:    "5",
+  keller:           "Kellerabteil vorhanden",
+  fassade_daemmung: null,
+  dachgeschoss:     null,
+  straenge:         null,
+  fenster_material: null,
+  fenster_verglas:  null,
+  baujahr_fenster:  null,
+  heizung:          "Fernwärme (Gas)",
+  baujahr_heizung:  null,
+  warmwasser:       "zentral (mit Warmwasser)"
+};
+
+// Mandatory fields (from mandatory.txt)
+const mandatoryFields = ["keller", "adresse", "wohnflaeche"];
+
+// Sample notes (from sampleTexts.txt)
+const sampleNotes = [
+  "Matches exposé. Staircase worn but OK.",
+  "Ceiling lower than expected; slight smoke smell.",
+  "Feels smaller than advertised.",
+  "Walls need plaster & new paint.",
+  "Small backyard, needs gardening.",
+  "3rd floor, no lift.",
+  "4 full floors + attic.",
+  "Keller slightly damp but usable.",
+  "Facade OK, some cracks.",
+  "Attic partly converted.",
+  "Old pipes in places.",
+  "Mixed wooden / plastic windows.",
+  "Double glazing only in living room.",
+  "Windows early 2000s.",
+  "Gas central heating, boiler in basement.",
+  "Boiler from ~1998.",
+  "Hot water central for all flats."
+];
+
+// ---------------------- Helpers & globals ----------------------
+const $  = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
-let exposeData = {};          // from data/expose.txt
-let mandatoryFields = [];     // from data/mandatory.txt
-let sampleNotes = [];         // from data/sampleTexts.txt
-let currentPdfDoc = null;     // jsPDF instance for current preview
-let currentPhotoRow = null;   // <tr> that will receive captured photo
-let inspectionFields = [];    // from data/inspectionFields.json
+let currentPdfDoc   = null;   // jsPDF instance
+let currentPhotoRow = null;   // <tr> for camera output
 
 const HISTORY_KEY = "cyf_history_v1";
 
+// ---------------------- Init ----------------------
 document.addEventListener("DOMContentLoaded", () => {
   initSidebar();
   initMobileNav();
@@ -24,82 +99,15 @@ document.addEventListener("DOMContentLoaded", () => {
   initPdfModal();
   initCameraModal();
   initHistory();
-  loadDataFiles();
+
+  // Prepare table structure from template + exposeData (but step 2 stays locked until user acts)
+  buildComparisonTableFromExample();
 });
 
-// ---------- Load text data files ----------
-async function loadDataFiles() {
-  // 1) inspectionFields template
-  try {
-    const res = await fetch("./data/inspectionFields.json"); // or .txt if you want
-    inspectionFields = await res.json();
-  } catch (e) {
-    console.warn("Could not load inspectionFields.json", e);
-  }
-
-  // 2) expose.txt
-  try {
-    const res = await fetch("./data/expose.txt");
-    const text = await res.text();
-    exposeData = parseExposeText(text);
-  } catch (e) {
-    console.warn("Could not load expose.txt", e);
-  }
-
-  // 3) mandatory.txt
-  try {
-    const res = await fetch("./data/mandatory.txt");
-    const text = await res.text();
-    mandatoryFields = text
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-  } catch (e) {
-    console.warn("Could not load mandatory.txt", e);
-  }
-
-  // 4) sampleTexts.txt
-  try {
-    const res = await fetch("./data/sampleTexts.txt");
-    const text = await res.text();
-    sampleNotes = text
-      .split("\n")
-      .map((s) => s.trim())
-      .filter(Boolean);
-  } catch (e) {
-    console.warn("Could not load sampleTexts.txt", e);
-  }
-}
-
-	function parseExposeText(text) {
-	  const lines = text.split("\n");
-	  const obj = {};
-
-	  for (const line of lines) {
-		const trimmed = line.trim();
-		if (!trimmed || !trimmed.includes("=")) continue;
-
-		const [rawKey, ...rest] = trimmed.split("=");
-		const key = rawKey.trim();
-		const rawValue = rest.join("=").trim();
-
-		// Handle empty, missing, or literal "null"
-		const value =
-		  rawValue === "" ||
-		  rawValue.toLowerCase() === "null"
-			? null
-			: rawValue;
-
-		obj[key] = value;
-	  }
-
-	  return obj;
-	}
-
-// ---------- Sidebar + view switching ----------
+// ---------------------- Sidebar & View switching ----------------------
 function initSidebar() {
   const sidebar = $("#sidebar");
-  const toggle = $("#sidebar-toggle");
+  const toggle  = $("#sidebar-toggle");
   if (!sidebar || !toggle) return;
 
   toggle.addEventListener("click", () => {
@@ -113,7 +121,6 @@ function initViewSwitching() {
     $(id)
   );
 
-  // initial state
   if (historyCard) historyCard.style.display = "none";
 
   function showView(view) {
@@ -130,7 +137,7 @@ function initViewSwitching() {
     });
 
     if (view === "logout") {
-      alert("Logout clicked (no backend attached yet).");
+      alert("Logout clicked (no backend attached).");
     }
   }
 
@@ -141,16 +148,15 @@ function initViewSwitching() {
     });
   });
 
-  // mobile menu
   $("#nav-new-expose")?.addEventListener("click", () => showView("new"));
   $("#nav-history")?.addEventListener("click", () => showView("history"));
   $("#nav-logout-mobile")?.addEventListener("click", () => showView("logout"));
 }
 
-// ---------- Mobile nav ----------
+// ---------------------- Mobile menu ----------------------
 function initMobileNav() {
   const toggle = $("#mobile-left-toggle");
-  const menu = $("#mobile-left-menu");
+  const menu   = $("#mobile-left-menu");
   if (!toggle || !menu) return;
 
   toggle.addEventListener("click", () => {
@@ -158,7 +164,7 @@ function initMobileNav() {
   });
 }
 
-// ---------- Steps bar ----------
+// ---------------------- Steps bar ----------------------
 function initSteps() {
   const stepButtons = $$("#steps-floating .steps-inner button");
   stepButtons.forEach((btn) => {
@@ -179,7 +185,6 @@ function goToStep(step) {
 
   Object.entries(cards).forEach(([s, card]) => {
     if (!card) return;
-    // visually highlight only the current step
     if (parseInt(s, 10) === step) {
       card.classList.remove("step-disabled");
       card.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -192,13 +197,13 @@ function goToStep(step) {
   });
 }
 
-// ---------- Step 1: file upload / example ----------
+// ---------------------- Step 1 – File upload & example ----------------------
 function initFileUpload() {
-  const dropArea = $("#drop-area");
-  const fileInput = $("#file-input");
-  const fileInfo = $("#file-info");
-  const browseBtn = $("#select-file-btn");
-  const loadExampleBtn = $("#load-example-btn");
+  const dropArea      = $("#drop-area");
+  const fileInput     = $("#file-input");
+  const fileInfo      = $("#file-info");
+  const browseBtn     = $("#select-file-btn");
+  const loadExampleBtn= $("#load-example-btn");
 
   if (!dropArea || !fileInput || !fileInfo || !browseBtn) return;
 
@@ -239,25 +244,17 @@ function initFileUpload() {
   });
 
   loadExampleBtn?.addEventListener("click", () => {
-    // we already loaded exposeData & mandatoryFields on startup
-    if (!Object.keys(exposeData).length) {
-      alert("Example exposé not available.");
-      return;
-    }
     fileInfo.textContent = "Using example exposé: Kantstraße 123, 10625 Berlin";
-    buildComparisonTableFromExample();
     unlockStep2();
   });
 
   function handleFile(file) {
     if (!file) return;
     if (file.type !== "application/pdf") {
-      alert("Please upload a PDF file.");
+      alert("Please upload a PDF.");
       return;
     }
     fileInfo.textContent = `Loaded: ${file.name}`;
-    // You can parse the PDF here with pdf.js if you want.
-    // For now we just unlock step 2.
     unlockStep2();
   }
 
@@ -272,41 +269,40 @@ function initFileUpload() {
       step2Button.disabled = false;
       step2Button.classList.add("unlocked");
     }
-
-    // If coming from example, build table
-    if ($("#comparison-body").children.length === 0) {
-      buildComparisonTableFromExample();
-    }
   }
 }
 
+// Build table once from the template + example expose
 function buildComparisonTableFromExample() {
   const tbody = $("#comparison-body");
   if (!tbody) return;
+
   tbody.innerHTML = "";
 
-  // mandatory fields as base rows
-  mandatoryFields.forEach((key) => {
-    const label = key;
-    const exposeValue = exposeData[key] || "";
-    const tr = createTextRow(label, exposeValue, true);
+  inspectionFields.forEach((field) => {
+    const id          = field.id;
+    const exposeValue = Object.prototype.hasOwnProperty.call(exposeData, id)
+      ? exposeData[id]
+      : null;
+    const isMandatory = mandatoryFields.includes(id);
+    const tr          = createFieldRow(field, exposeValue, isMandatory);
     tbody.appendChild(tr);
   });
 }
 
-// ---------- Step 2: table controls ----------
+// ---------------------- Step 2 – table actions ----------------------
 function initStepNavigation() {
-  const addTextBtn = $("#add-text-row-btn");
-  const addPhotoBtn = $("#add-photo-row-btn");
-  const resetBtn = $("#reset-example-btn");
-  const mockBtn = $("#mock-autofill-btn");
-  const goStep3Btn = $("#go-step3-btn");
+  const addTextBtn   = $("#add-text-row-btn");
+  const addPhotoBtn  = $("#add-photo-row-btn");
+  const resetBtn     = $("#reset-example-btn");
+  const mockBtn      = $("#mock-autofill-btn");
+  const goStep3Btn   = $("#go-step3-btn");
 
   addTextBtn?.addEventListener("click", () => {
     const label = prompt("Name of the new field:", "Custom note");
     const tbody = $("#comparison-body");
     if (!tbody) return;
-    const tr = createTextRow(label || "Custom note", "", false);
+    const tr = createCustomTextRow(label || "Custom note");
     tbody.appendChild(tr);
   });
 
@@ -318,10 +314,6 @@ function initStepNavigation() {
   });
 
   resetBtn?.addEventListener("click", () => {
-    if (!Object.keys(exposeData).length) {
-      alert("Example data not loaded yet.");
-      return;
-    }
     buildComparisonTableFromExample();
   });
 
@@ -354,19 +346,77 @@ function initStepNavigation() {
   });
 }
 
-function createTextRow(label, exposeValue, mandatory) {
+function createFieldRow(field, exposeValue, mandatory) {
   const tr = document.createElement("tr");
-  tr.classList.add("row-text");
+  tr.classList.add("row-field", `field-${field.id}`);
+
+  // Field label
+  const tdField = document.createElement("td");
+  tdField.textContent = field.label + (mandatory ? " *" : "");
+  tr.appendChild(tdField);
+
+  // Exposé column
+  const tdExpose = document.createElement("td");
+  if (field.type === "select" && Array.isArray(field.options)) {
+    const selectExpose = document.createElement("select");
+    selectExpose.className = "expose-input";
+
+    field.options.forEach((opt) => {
+      const option = document.createElement("option");
+      option.value = opt;
+      option.textContent = opt;
+      if (exposeValue && exposeValue === opt) option.selected = true;
+      selectExpose.appendChild(option);
+    });
+
+    tdExpose.appendChild(selectExpose);
+  } else {
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "expose-input";
+    if (exposeValue != null) input.value = exposeValue;
+    tdExpose.appendChild(input);
+  }
+  tr.appendChild(tdExpose);
+
+  // Reality column
+  const tdReality = document.createElement("td");
+  if (field.type === "select" && Array.isArray(field.options)) {
+    const selectReality = document.createElement("select");
+    selectReality.className = "reality-input";
+
+    field.options.forEach((opt) => {
+      const option = document.createElement("option");
+      option.value = opt;
+      option.textContent = opt;
+      selectReality.appendChild(option);
+    });
+
+    tdReality.appendChild(selectReality);
+  } else {
+    const textarea = document.createElement("textarea");
+    textarea.className = "reality-input";
+    textarea.rows = 2;
+    tdReality.appendChild(textarea);
+  }
+  tr.appendChild(tdReality);
+
+  return tr;
+}
+
+// Custom text-only row (for "Add custom text row")
+function createCustomTextRow(label) {
+  const tr = document.createElement("tr");
+  tr.classList.add("row-custom");
 
   const tdField = document.createElement("td");
-  tdField.textContent = label + (mandatory ? " *" : "");
+  tdField.textContent = label;
   tr.appendChild(tdField);
 
   const tdExpose = document.createElement("td");
   const exposeInput = document.createElement("input");
   exposeInput.type = "text";
   exposeInput.className = "expose-input";
-  exposeInput.value = exposeValue || "";
   tdExpose.appendChild(exposeInput);
   tr.appendChild(tdExpose);
 
@@ -380,6 +430,7 @@ function createTextRow(label, exposeValue, mandatory) {
   return tr;
 }
 
+// Photo row
 function createPhotoRow() {
   const tr = document.createElement("tr");
   tr.classList.add("row-photo");
@@ -397,9 +448,10 @@ function createPhotoRow() {
   btn.type = "button";
   btn.textContent = "Add photo (camera)";
   btn.className = "btn-chip";
+
   const img = document.createElement("img");
-  img.style.display = "block";
-  img.style.maxWidth = "140px";
+  img.style.display   = "block";
+  img.style.maxWidth  = "140px";
   img.style.marginTop = "4px";
 
   btn.addEventListener("click", () => {
@@ -413,39 +465,38 @@ function createPhotoRow() {
   return tr;
 }
 
-// ---------- Signature pad ----------
+// ---------------------- Signature pad ----------------------
 function initSignaturePad() {
-  const canvas = $("#signature-pad");
-  const clearBtn = $("#clear-signature-btn");
+  const canvas  = $("#signature-pad");
+  const clearBtn= $("#clear-signature-btn");
   if (!canvas || !clearBtn) return;
 
   const ctx = canvas.getContext("2d");
   let drawing = false;
-  let lastX = 0;
-  let lastY = 0;
+  let lastX   = 0;
+  let lastY   = 0;
 
   const resizeCanvas = () => {
-    const rect = canvas.getBoundingClientRect();
+    const rect    = canvas.getBoundingClientRect();
     const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    canvas.width = rect.width || 600;
+    canvas.width  = rect.width || 600;
     canvas.height = 200;
     ctx.putImageData(imgData, 0, 0);
   };
 
-  // initial size
-  canvas.width = canvas.offsetWidth || 600;
+  canvas.width  = canvas.offsetWidth || 600;
   canvas.height = 200;
 
   const startDraw = (x, y) => {
     drawing = true;
-    lastX = x;
-    lastY = y;
+    lastX   = x;
+    lastY   = y;
   };
 
   const moveDraw = (x, y) => {
     if (!drawing) return;
-    ctx.lineWidth = 2;
-    ctx.lineCap = "round";
+    ctx.lineWidth   = 2;
+    ctx.lineCap     = "round";
     ctx.beginPath();
     ctx.moveTo(lastX, lastY);
     ctx.lineTo(x, y);
@@ -473,7 +524,7 @@ function initSignaturePad() {
     "touchstart",
     (e) => {
       const rect = canvas.getBoundingClientRect();
-      const t = e.touches[0];
+      const t    = e.touches[0];
       startDraw(t.clientX - rect.left, t.clientY - rect.top);
       e.preventDefault();
     },
@@ -483,7 +534,7 @@ function initSignaturePad() {
     "touchmove",
     (e) => {
       const rect = canvas.getBoundingClientRect();
-      const t = e.touches[0];
+      const t    = e.touches[0];
       moveDraw(t.clientX - rect.left, t.clientY - rect.top);
       e.preventDefault();
     },
@@ -505,17 +556,17 @@ function initSignaturePad() {
   window.addEventListener("resize", resizeCanvas);
 }
 
-// ---------- PDF modal + jsPDF ----------
+// ---------------------- PDF modal + jsPDF ----------------------
 function initPdfModal() {
-  const generateBtn = $("#generate-pdf-btn");
-  const modalBackdrop = $("#pdf-modal-backdrop");
-  const closeBtn = $("#close-modal-btn");
-  const cancelBtn = $("#cancel-download-btn");
-  const approveBtn = $("#approve-download-btn");
-  const validatorInput = $("#validator");
-  const validatorLabel = $("#modal-validator-label");
-  const validatorFooter = $("#modal-validator-footer");
-  const iframe = $("#pdf-preview-frame");
+  const generateBtn      = $("#generate-pdf-btn");
+  const modalBackdrop    = $("#pdf-modal-backdrop");
+  const closeBtn         = $("#close-modal-btn");
+  const cancelBtn        = $("#cancel-download-btn");
+  const approveBtn       = $("#approve-download-btn");
+  const validatorInput   = $("#validator");
+  const validatorLabel   = $("#modal-validator-label");
+  const validatorFooter  = $("#modal-validator-footer");
+  const iframe           = $("#pdf-preview-frame");
 
   if (!generateBtn || !modalBackdrop || !iframe) return;
 
@@ -530,7 +581,6 @@ function initPdfModal() {
     if (validatorFooter)
       validatorFooter.textContent = `Validator: ${validatorName}`;
 
-    // build pdf
     const pdfDoc = buildPdfDocument(validatorName);
     currentPdfDoc = pdfDoc;
 
@@ -556,12 +606,16 @@ function initPdfModal() {
       return;
     }
     const validatorName = validatorInput?.value.trim() || "inspector";
-    const address = exposeData.adresse || "Unknown address";
-    const filename = `CheckYourFlat_${address.replace(/\s+/g, "_")}_${validatorName}.pdf`;
+    const address       = exposeData.adresse || "Unknown address";
+    const filename      =
+      "CheckYourFlat_" +
+      address.replace(/\s+/g, "_") +
+      "_" +
+      validatorName.replace(/\s+/g, "_") +
+      ".pdf";
 
     currentPdfDoc.save(filename);
 
-    // store in history
     addEntryToHistory({
       validator: validatorName,
       address,
@@ -601,7 +655,6 @@ function buildPdfDocument(validatorName) {
   doc.text("Summary of fields:", 10, y);
   y += 6;
 
-  // table rows
   const tbody = $("#comparison-body");
   if (tbody) {
     const rows = Array.from(tbody.querySelectorAll("tr"));
@@ -643,7 +696,6 @@ function buildPdfDocument(validatorName) {
     });
   }
 
-  // signature
   const canvas = $("#signature-pad");
   if (canvas) {
     const imgData = canvas.toDataURL("image/png");
@@ -658,14 +710,14 @@ function buildPdfDocument(validatorName) {
   return doc;
 }
 
-// ---------- Camera modal ----------
+// ---------------------- Camera modal ----------------------
 function initCameraModal() {
   const cameraModal = $("#camera-modal");
-  const closeBtn = $("#camera-close");
-  const triggerBtn = $("#camera--trigger");
-  const view = $("#camera--view");
-  const sensor = $("#camera--sensor");
-  const output = $("#camera--output");
+  const closeBtn    = $("#camera-close");
+  const triggerBtn  = $("#camera--trigger");
+  const view        = $("#camera--view");
+  const sensor      = $("#camera--sensor");
+  const output      = $("#camera--output");
 
   if (!cameraModal || !closeBtn || !triggerBtn || !view || !sensor || !output)
     return;
@@ -694,7 +746,7 @@ function initCameraModal() {
 
   triggerBtn.addEventListener("click", () => {
     const ctx = sensor.getContext("2d");
-    sensor.width = view.videoWidth;
+    sensor.width  = view.videoWidth;
     sensor.height = view.videoHeight;
     ctx.drawImage(view, 0, 0);
     const dataUrl = sensor.toDataURL("image/png");
@@ -703,9 +755,7 @@ function initCameraModal() {
 
     if (currentPhotoRow) {
       const img = currentPhotoRow.querySelector("td:nth-child(3) img");
-      if (img) {
-        img.src = dataUrl;
-      }
+      if (img) img.src = dataUrl;
     }
     closeCamera();
   });
@@ -714,7 +764,6 @@ function initCameraModal() {
     closeCamera();
   });
 
-  // expose to other functions
   window.__openCameraModal = openCamera;
 }
 
@@ -727,7 +776,7 @@ function openCameraForRow(row) {
   }
 }
 
-// ---------- History ----------
+// ---------------------- History (localStorage) ----------------------
 function initHistory() {
   renderHistory();
 }
@@ -768,11 +817,11 @@ function renderHistory() {
   container.innerHTML = "";
   list.forEach((item) => {
     const div = document.createElement("div");
-    div.style.border = "1px solid #eee";
+    div.style.border       = "1px solid #eee";
     div.style.borderRadius = "10px";
-    div.style.padding = "8px 10px";
+    div.style.padding      = "8px 10px";
     div.style.marginBottom = "8px";
-    div.style.fontSize = "13px";
+    div.style.fontSize     = "13px";
 
     const date = new Date(item.date);
     const dateStr = isNaN(date.getTime())
