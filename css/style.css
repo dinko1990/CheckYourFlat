@@ -73,6 +73,8 @@ body {
 .sidebar.collapsed nav .nav-item span:not(.icon) {
   display: none; /* hide label text */
 }
+
+
 .sidebar-toggle {
   position: absolute;
   top: 16px;
