@@ -39,7 +39,7 @@ body {
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, #ffb85c, #ff6b6b);
+  background: linear-gradient(135deg, #ffc977, #ff88ae);
   display: flex;
   align-items: center;
   justify-content: center;
