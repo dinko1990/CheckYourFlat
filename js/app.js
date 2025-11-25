@@ -1,4 +1,4 @@
-// js/app.js
+/// js/app.js
 
 // Helper: safe query
 const $ = (selector) => document.querySelector(selector);
