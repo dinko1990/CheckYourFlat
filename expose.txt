@@ -1,0 +1,17 @@
+adresse=Kantstraße 123, 10625 Berlin
+objekttyp=Etagenwohnung
+baujahr=1960
+wohnflaeche=ca. 67 m²
+grundstueck=
+etage=2
+vollgeschosse=5
+keller=Kellerabteil vorhanden
+fassade_daemmung=
+dachgeschoss=
+straenge=
+fenster_material=
+fenster_verglas=
+baujahr_fenster=
+heizung=Fernwärme (Gas)
+baujahr_heizung=
+warmwasser=zentral (mit Warmwasser)
