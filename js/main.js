@@ -330,47 +330,51 @@
     comparisonBody.appendChild(tr);
   }
 
-  function addCustomTextRow(label) {
-  const tr = document.createElement("tr");
-  tr.dataset.rowType = "custom-text";
+  function addCustomTextRow() {
+    const tr = document.createElement("tr");
+    tr.dataset.rowType = "custom-text";
 
-  const descTd = document.createElement("td");
-  descTd.dataset.label = "🧾 Field";
-  descTd.textContent = label || "Extra note";
+    const descTd = document.createElement("td");
+    descTd.dataset.label = "🧾 Field";
 
-  const trash = document.createElement("button");
-  trash.type = "button";
-  trash.className = "trash-inline";
-  trash.textContent = "🗑";
-  trash.addEventListener("click", () => {
-    if (confirm("Remove this row?")) tr.remove();
-  });
-  descTd.appendChild(trash);
+    const fieldSpan = document.createElement("span");
+    fieldSpan.className = "cell-editable";
+    fieldSpan.contentEditable = "true";
+    fieldSpan.textContent = "Custom note";
+    descTd.appendChild(fieldSpan);
 
-  const exposeTd = document.createElement("td");
-  exposeTd.dataset.label = "🏢 Exposé";
-  exposeTd.className = "expose-cell";
-  exposeTd.textContent = "";
+    const trash = document.createElement("button");
+    trash.type = "button";
+    trash.className = "trash-inline";
+    trash.textContent = "🗑";
+    trash.addEventListener("click", () => {
+      if (confirm("Remove this row?")) tr.remove();
+    });
+    descTd.appendChild(trash);
 
-  const realityTd = document.createElement("td");
-  realityTd.dataset.label = "✅ Reality";
-  realityTd.className = "editable";
+    const exposeTd = document.createElement("td");
+    exposeTd.dataset.label = "🏢 Exposé";
+    exposeTd.className = "expose-cell";
+    exposeTd.textContent = "";
 
-  const span = document.createElement("span");
-  span.className = "cell-editable";
-  span.contentEditable = "true";
-  span.innerHTML = '<span style="opacity:0.35;">Write your inspection result…</span>';
-  span.addEventListener("focus", () => {
-    if (span.querySelector("span")) span.textContent = "";
-  });
-  realityTd.appendChild(span);
+    const realityTd = document.createElement("td");
+    realityTd.dataset.label = "✅ Reality";
+    realityTd.className = "editable";
 
-  tr.appendChild(descTd);
-  tr.appendChild(exposeTd);
-  tr.appendChild(realityTd);
-  comparisonBody.appendChild(tr);
-}
+    const span = document.createElement("span");
+    span.className = "cell-editable";
+    span.contentEditable = "true";
+    span.innerHTML = '<span style="opacity:0.35;">Write your inspection result…</span>';
+    span.addEventListener("focus", () => {
+      if (span.querySelector("span")) span.textContent = "";
+    });
+    realityTd.appendChild(span);
 
+    tr.appendChild(descTd);
+    tr.appendChild(exposeTd);
+    tr.appendChild(realityTd);
+    comparisonBody.appendChild(tr);
+  }
 
   /* ===== CAMERA / PHOTO ROW ===== */
   const cameraModal = document.getElementById("camera-modal");
@@ -416,97 +420,91 @@
     closeCamera();
   });
 
-  function addPhotoRow(label) {
-  const tr = document.createElement("tr");
-  tr.dataset.rowType = "photo";
+  function addPhotoRow() {
+    const tr = document.createElement("tr");
+    tr.dataset.rowType = "photo";
 
-  const descTd = document.createElement("td");
-  descTd.dataset.label = "🧾 Field";
-  descTd.textContent = label || "Photo / comment";
+    const descTd = document.createElement("td");
+    descTd.dataset.label = "🧾 Field";
+    descTd.textContent = "Photo / comment";
 
-  const trash = document.createElement("button");
-  trash.type = "button";
-  trash.className = "trash-inline";
-  trash.textContent = "🗑";
-  trash.addEventListener("click", () => {
-    if (confirm("Remove this photo row?")) tr.remove();
-  });
-  descTd.appendChild(trash);
+    const trash = document.createElement("button");
+    trash.type = "button";
+    trash.className = "trash-inline";
+    trash.textContent = "🗑";
+    trash.addEventListener("click", () => {
+      if (confirm("Remove this photo row?")) tr.remove();
+    });
+    descTd.appendChild(trash);
 
-  const exposeTd = document.createElement("td");
-  exposeTd.dataset.label = "🏢 Exposé";
-  exposeTd.className = "expose-cell";
-  exposeTd.textContent = "";
+    const exposeTd = document.createElement("td");
+    exposeTd.dataset.label = "🏢 Exposé";
+    exposeTd.className = "expose-cell";
+    exposeTd.textContent = "";
 
-  const realityTd = document.createElement("td");
-  realityTd.dataset.label = "✅ Reality";
-  realityTd.className = "editable";
+    const realityTd = document.createElement("td");
+    realityTd.dataset.label = "✅ Reality";
+    realityTd.className = "editable";
 
-  const wrapper = document.createElement("div");
-  wrapper.className = "photo-wrapper";
+    const wrapper = document.createElement("div");
+    wrapper.className = "photo-wrapper";
 
-  const img = document.createElement("img");
-  img.className = "photo-preview";
-  img.style.display = "none";
+    const img = document.createElement("img");
+    img.className = "photo-preview";
+    img.style.display = "none";
 
-  const actions = document.createElement("div");
-  actions.className = "photo-actions";
+    const actions = document.createElement("div");
+    actions.className = "photo-actions";
 
-  const uploadBtn = document.createElement("button");
-  uploadBtn.type = "button";
-  uploadBtn.textContent = "Upload photo";
-  const fileInput = document.createElement("input");
-  fileInput.type = "file";
-  fileInput.accept = "image/*";
-  fileInput.style.display = "none";
-  uploadBtn.addEventListener("click", () => fileInput.click());
-  fileInput.addEventListener("change", e => {
-    const f = e.target.files[0];
-    if (!f) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      img.src = ev.target.result;
-      img.style.display = "block";
-    };
-    reader.readAsDataURL(f);
-  });
+    const uploadBtn = document.createElement("button");
+    uploadBtn.type = "button";
+    uploadBtn.textContent = "Upload photo";
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = "image/*";
+    fileInput.style.display = "none";
+    uploadBtn.addEventListener("click", () => fileInput.click());
+    fileInput.addEventListener("change", e => {
+      const f = e.target.files[0];
+      if (!f) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        img.src = ev.target.result;
+        img.style.display = "block";
+      };
+      reader.readAsDataURL(f);
+    });
 
-  const cameraBtn = document.createElement("button");
-  cameraBtn.type = "button";
-  cameraBtn.textContent = "Use camera";
-  cameraBtn.addEventListener("click", () => openCamera(img));
+    const cameraBtn = document.createElement("button");
+    cameraBtn.type = "button";
+    cameraBtn.textContent = "Use camera";
+    cameraBtn.addEventListener("click", () => openCamera(img));
 
-  actions.appendChild(uploadBtn);
-  actions.appendChild(cameraBtn);
-  actions.appendChild(fileInput);
+    actions.appendChild(uploadBtn);
+    actions.appendChild(cameraBtn);
+    actions.appendChild(fileInput);
 
-  const textarea = document.createElement("textarea");
-  textarea.className = "photo-comment";
-  textarea.placeholder = "Comment (optional)…";
+    const textarea = document.createElement("textarea");
+    textarea.className = "photo-comment";
+    textarea.placeholder = "Comment (optional)…";
 
-  wrapper.appendChild(img);
-  wrapper.appendChild(actions);
-  wrapper.appendChild(textarea);
-  realityTd.appendChild(wrapper);
+    wrapper.appendChild(img);
+    wrapper.appendChild(actions);
+    wrapper.appendChild(textarea);
+    realityTd.appendChild(wrapper);
 
-  tr.appendChild(descTd);
-  tr.appendChild(exposeTd);
-  tr.appendChild(realityTd);
-  comparisonBody.appendChild(tr);
-}
-
+    tr.appendChild(descTd);
+    tr.appendChild(exposeTd);
+    tr.appendChild(realityTd);
+    comparisonBody.appendChild(tr);
+  }
 
   function buildTable() {
     comparisonBody.innerHTML = "";
     inspectionFields.forEach(addFieldRow);
   }
 
-addTextRowBtn.addEventListener("click", () => {
-  const label = prompt("New row title:", "Extra note");
-  if (!label) return;
-  addCustomTextRow(label.trim());
-});
-
+  addTextRowBtn.addEventListener("click", addCustomTextRow);
   addPhotoRowBtn.addEventListener("click", addPhotoRow);
 
   resetExampleBtn.addEventListener("click", () => {
@@ -659,7 +657,7 @@ addTextRowBtn.addEventListener("click", () => {
       const canvas = document.createElement("canvas");
       canvas.width = img.width;
       canvas.height = img.height;
-      const ctx = signatureCanvas.getContext("2d");
+      const ctx = canvas.getContext("2d");
       ctx.drawImage(img, 0, 0);
       logoImageData = canvas.toDataURL("image/png");
     };
