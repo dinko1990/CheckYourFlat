@@ -237,7 +237,6 @@ body {
   display: inline-flex;
   padding: 4px;
   border-radius: 999px;
-  background:#241238;
   box-shadow: 0 12px 25px rgba(42, 8, 80, 0.18);
   gap: 4px;
 }
@@ -248,7 +247,7 @@ body {
   border: none;
   font-size: 13px;
   cursor: pointer;
-  background: transparent;
+  background:#241238;
   color: #5d4e8e;
   transition: background 0.15s ease, color 0.15s ease, transform 0.08s ease;
 }
