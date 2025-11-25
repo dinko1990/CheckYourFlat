@@ -231,14 +231,13 @@ body {
   display: flex;
   justify-content: center; /* center instead of right */
   margin-bottom: 10px;
-  background:#241238;
 }
 
 .steps-inner {
   display: inline-flex;
   padding: 4px;
   border-radius: 999px;
-  background: rgba(247, 245, 255, 0.9);
+  background:#241238;
   box-shadow: 0 12px 25px rgba(42, 8, 80, 0.18);
   gap: 4px;
 }
