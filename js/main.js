@@ -836,40 +836,61 @@ addPhotoRowBtn.addEventListener("click", () => {
     let y = metaY + 9;
     const lineHeight = 5;
 
-    // Collect rows
-    const rows = [];
-    comparisonBody.querySelectorAll("tr").forEach(tr => {
-      const type = tr.dataset.rowType || "field";
-      const cells = tr.querySelectorAll("td");
+// Collect rows
+const rows = [];
 
-      let desc = "";
-      if (cells[0]) {
-        const firstNode = cells[0].childNodes[0];
-        desc = (firstNode && firstNode.textContent ? firstNode.textContent : "").trim();
-      }
+comparisonBody.querySelectorAll("tr").forEach(tr => {
+  const type = tr.dataset.rowType || "field";
+  const cells = tr.querySelectorAll("td");
 
-      let reality = "";
-      let photoData = null;
+  /* --- DESCRIPTION / TITLE --- */
+  let desc = "";
 
-      if (type === "photo") {
-        const img = tr.querySelector(".photo-preview");
-        const textarea = tr.querySelector(".photo-comment");
-        if (textarea) reality = (textarea.value || "").trim();
-        if (img && img.src && img.style.display !== "none") {
-          photoData = img.src;
-        }
-      } else {
-        const span = tr.querySelector("td.editable .cell-editable");
-        const select = tr.querySelector("td.editable select");
-        if (span) reality = (span.textContent || "").replace(/\s+/g, " ").trim();
-        if (select && select.value) {
-          reality = select.value;
-        }
-      }
+  if (cells[0]) {
+    // Prefer editable title span
+    const labelSpan = cells[0].querySelector(".row-title-editable");
+    if (labelSpan) {
+      desc = labelSpan.textContent.trim();
+    } else {
+      // Fallback: first column text (remove trash icon)
+      desc = cells[0].cloneNode(true).textContent.replace("🗑", "").trim();
+    }
+  }
 
-      if (!desc && !reality && !photoData) return;
-      rows.push({ type, desc, reality, photoData });
-    });
+  /* --- REALITY & PHOTO DATA --- */
+  let reality = "";
+  let photoData = null;
+
+  if (type === "photo") {
+    const img = tr.querySelector(".photo-preview");
+    const textarea = tr.querySelector(".photo-comment");
+
+    if (textarea) {
+      reality = (textarea.value || "").trim();
+    }
+
+    if (img && img.src && img.style.display !== "none") {
+      photoData = img.src;
+    }
+
+  } else {
+    const span = tr.querySelector("td.editable .cell-editable");
+    const select = tr.querySelector("td.editable select");
+
+    if (span) {
+      reality = (span.textContent || "").replace(/\s+/g, " ").trim();
+    }
+    if (select && select.value) {
+      reality = select.value;
+    }
+  }
+
+  // Skip empty rows
+  if (!desc && !reality && !photoData) return;
+
+  rows.push({ type, desc, reality, photoData });
+});
+
 
     rows.forEach(row => {
       if (y > 270) {
