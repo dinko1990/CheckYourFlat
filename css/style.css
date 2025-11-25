@@ -74,6 +74,16 @@ body {
   display: none; /* hide label text */
 }
 
+.sidebar.collapsed nav .brand-text span:not(.icon) {
+  display: none; /* hide label text */
+}
+
+.sidebar.collapsed nav .brand-text span:not(.icon) {
+  display: none; /* hide label text */
+}
+
+
+
 
 .sidebar-toggle {
   position: absolute;
