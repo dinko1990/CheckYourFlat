@@ -1017,7 +1017,7 @@ comparisonBody.querySelectorAll("tr").forEach(tr => {
 
       const title = document.createElement("div");
       title.textContent = item.filename;
-]
+    }
       const meta = document.createElement("div");
       meta.className = "history-meta";
       meta.textContent = (item.address || "") + " • " + item.when +
