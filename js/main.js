@@ -251,84 +251,28 @@
     const isMandatory = MANDATORY_FIELDS.includes(field.id);
     if (isMandatory) tr.classList.add("mandatory-row");
 
-    // Column 1: field label (+ delete for custom, but not for template mandatory rows)
-    const descTd = document.createElement("td");
-    descTd.dataset.label = "🧾 Field";
-    descTd.textContent = field.label;
-    tr.appendChild(descTd);
+  // Column 1: field label (with delete only for custom rows)
+  const descTd = document.createElement("td");
+  descTd.dataset.label = "🧾 Field";
 
-    // Column 2: exposé (read-only)
-    const exposeTd = document.createElement("td");
-    exposeTd.className = "expose-cell";
-    exposeTd.dataset.label = "🏢 Exposé";
-    const exposeValue = EXPOSE_DATA[field.id] || "";
-    exposeTd.textContent = exposeValue;
-    tr.appendChild(exposeTd);
+  const labelSpan = document.createElement("span");
+  labelSpan.textContent = field.label;
+  descTd.appendChild(labelSpan);
 
-    // Column 3: reality (editable)
-    const realityTd = document.createElement("td");
-    realityTd.className = "editable";
-    realityTd.dataset.label = "✅ Reality";
-
-    const copyBtn = document.createElement("button");
-    copyBtn.type = "button";
-    copyBtn.className = "copy-btn";
-    copyBtn.textContent = "Copy from exposé";
-
-    if (field.type === "text") {
-      const span = document.createElement("span");
-      span.className = "cell-editable";
-      span.contentEditable = "true";
-      span.dataset.placeholder = "Write your inspection result…";
-      span.innerHTML = '<span style="opacity:0.35;">Write your inspection result…</span>';
-
-      span.addEventListener("focus", () => {
-        if (span.querySelector("span")) span.textContent = "";
-      });
-
-      copyBtn.addEventListener("click", () => {
-        span.textContent = exposeValue || "";
-      });
-
-      realityTd.appendChild(copyBtn);
-      realityTd.appendChild(span);
-    } else if (field.type === "select") {
-      const select = document.createElement("select");
-      select.style.width = "100%";
-      select.style.padding = "3px 6px";
-      select.style.borderRadius = "10px";
-      select.style.border = "1px solid #dcd3ff";
-
-      const ph = document.createElement("option");
-      ph.value = "";
-      ph.textContent = "Select…";
-      select.appendChild(ph);
-
-      field.options.forEach(o => {
-        const opt = document.createElement("option");
-        opt.value = o;
-        opt.textContent = o;
-        select.appendChild(opt);
-      });
-
-      copyBtn.addEventListener("click", () => {
-        const val = (exposeValue || "").trim();
-        if (!val) return;
-        const opts = Array.from(select.options);
-        let idx = opts.findIndex(o => o.value === val);
-        if (idx === -1) {
-          idx = opts.findIndex(o => val.toLowerCase().includes(o.value.toLowerCase()));
-        }
-        if (idx >= 0) select.selectedIndex = idx;
-      });
-
-      realityTd.appendChild(copyBtn);
-      realityTd.appendChild(select);
-    }
-
-    tr.appendChild(realityTd);
-    comparisonBody.appendChild(tr);
+  // Custom rows: id starts with "custom_"
+  const isCustom = field.id && field.id.startsWith("custom_");
+  if (isCustom) {
+    const trash = document.createElement("button");
+    trash.type = "button";
+    trash.className = "trash-inline";
+    trash.textContent = "🗑";
+    trash.addEventListener("click", () => {
+      if (confirm("Remove this row?")) tr.remove();
+    });
+    descTd.appendChild(trash);
   }
+
+  tr.appendChild(descTd);
 
  addTextRowBtn.addEventListener("click", () => {
   const label = prompt("New row title:", "Extra note");
