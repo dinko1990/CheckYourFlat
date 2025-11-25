@@ -9,6 +9,7 @@ let mandatoryFields = [];     // from data/mandatory.txt
 let sampleNotes = [];         // from data/sampleTexts.txt
 let currentPdfDoc = null;     // jsPDF instance for current preview
 let currentPhotoRow = null;   // <tr> that will receive captured photo
+let inspectionFields = [];    // from data/inspectionFields.json
 
 const HISTORY_KEY = "cyf_history_v1";
 
@@ -28,7 +29,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // ---------- Load text data files ----------
 async function loadDataFiles() {
-  // Exposé example
+  // 1) inspectionFields template
+  try {
+    const res = await fetch("./data/inspectionFields.json"); // or .txt if you want
+    inspectionFields = await res.json();
+  } catch (e) {
+    console.warn("Could not load inspectionFields.json", e);
+  }
+
+  // 2) expose.txt
   try {
     const res = await fetch("./data/expose.txt");
     const text = await res.text();
@@ -37,7 +46,7 @@ async function loadDataFiles() {
     console.warn("Could not load expose.txt", e);
   }
 
-  // Mandatory fields (comma-separated)
+  // 3) mandatory.txt
   try {
     const res = await fetch("./data/mandatory.txt");
     const text = await res.text();
@@ -49,7 +58,7 @@ async function loadDataFiles() {
     console.warn("Could not load mandatory.txt", e);
   }
 
-  // Sample notes (one per line)
+  // 4) sampleTexts.txt
   try {
     const res = await fetch("./data/sampleTexts.txt");
     const text = await res.text();
@@ -62,31 +71,30 @@ async function loadDataFiles() {
   }
 }
 
-function parseExposeText(text) {
-  const lines = text.split("\n");
-  const obj = {};
+	function parseExposeText(text) {
+	  const lines = text.split("\n");
+	  const obj = {};
 
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (!trimmed || !trimmed.includes("=")) continue;
+	  for (const line of lines) {
+		const trimmed = line.trim();
+		if (!trimmed || !trimmed.includes("=")) continue;
 
-    const [rawKey, ...rest] = trimmed.split("=");
-    const key = rawKey.trim();
-    const rawValue = rest.join("=").trim();
+		const [rawKey, ...rest] = trimmed.split("=");
+		const key = rawKey.trim();
+		const rawValue = rest.join("=").trim();
 
-    // Handle empty, missing, or literal "null"
-    const value =
-      rawValue === "" ||
-      rawValue.toLowerCase() === "null"
-        ? null
-        : rawValue;
+		// Handle empty, missing, or literal "null"
+		const value =
+		  rawValue === "" ||
+		  rawValue.toLowerCase() === "null"
+			? null
+			: rawValue;
 
-    obj[key] = value;
-  }
+		obj[key] = value;
+	  }
 
-  return obj;
-}
-
+	  return obj;
+	}
 
 // ---------- Sidebar + view switching ----------
 function initSidebar() {
