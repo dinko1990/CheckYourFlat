@@ -79,6 +79,10 @@ body {
 .sidebar.collapsed .brand-text span {
   display: none !important;
 }
+.sidebar.collapsed .brand-logo {
+  margin: 0 auto;
+  padding: 8px 0;
+}
 
 
 
