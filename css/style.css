@@ -226,6 +226,7 @@ body {
   border-radius: 999px;
   box-shadow: 0 12px 25px rgba(42, 8, 80, 0.18);
   gap: 4px;
+  background:#1c0f33;
 }
 .steps-inner button {
   width: 28px;
