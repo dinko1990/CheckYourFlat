@@ -348,7 +348,7 @@ body {
   font-size: 13px;
   font-weight: 600;
   background: linear-gradient(135deg, #ffc977, #ff88ae); /* orange → pink/purple */
-  color: #fff;
+  color: #1b1330;
   box-shadow: 0 10px 20px rgba(71, 32, 149, 0.35);
 }
 .upload-btn-main:hover {
