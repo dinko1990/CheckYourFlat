@@ -319,7 +319,7 @@ body {
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
-  background: linear-gradient(135deg, #ffb85c, #ff6b6b); /* orange → pink/purple */
+  background: linear-gradient(135deg, #ffc977, #ff88ae); /* orange → pink/purple */
   color: #fff;
   box-shadow: 0 10px 20px rgba(71, 32, 149, 0.35);
 }
@@ -528,7 +528,7 @@ body {
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  background: linear-gradient(135deg, #ffb85c, #ff6b6b); /* same gradient */
+  background: linear-gradient(135deg, #ffc977, #ff88ae); /* same gradient */
   color: #fff;
   box-shadow: 0 12px 24px rgba(58, 20, 125, 0.4);
 }
