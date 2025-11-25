@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Check Your Flat – Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="Logo.png" />
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    html, body {
+      height:100%;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:#ffffff;
+      color:#24153c;
+    }
+
+    body {
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .container {
+      width:100%;
+      max-width:480px;
+      padding:24px 16px;
+      text-align:center;
+    }
+
+    .big-header {
+      font-size:min(13vw, 52px);
+      font-weight:700;
+      margin-bottom:8px;
+    }
+
+    .tagline {
+      font-size:13px;
+      color:#7a719d;
+      margin-bottom:16px;
+    }
+
+    .logo img {
+      width:min(34vw, 150px);
+      height:auto;
+      margin-bottom:18px;
+      border-radius:50%;
+    }
+
+    .login-box {
+      background:#24153c;
+      color:#fefbff;
+      padding:18px 16px 20px;
+      border-radius:18px;
+      box-shadow:0 16px 32px rgba(0,0,0,0.3);
+      text-align:left;
+    }
+
+    .login-box h2 {
+      font-size:18px;
+      margin-bottom:4px;
+    }
+
+    .login-box p {
+      font-size:12px;
+      color:#c7c0f3;
+      margin-bottom:10px;
+    }
+
+    .field {
+      margin-bottom:10px;
+    }
+
+    .field label {
+      display:block;
+      font-size:12px;
+      margin-bottom:4px;
+      color:#dcd3ff;
+    }
+
+    .field input {
+      width:100%;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid #4a3a7b;
+      font-size:14px;
+      outline:none;
+      background:#1b0f31;
+      color:#fefbff;
+    }
+
+    .field input:focus {
+      border-color:#ffb85c;
+      box-shadow:0 0 0 2px rgba(255,184,92,0.35);
+    }
+
+    .login-btn {
+      width:100%;
+      padding:10px;
+      margin-top:6px;
+      border:none;
+      border-radius:999px;
+      background:linear-gradient(135deg,#ffb85c,#ff6b9c);
+      color:#24153c;
+      font-size:15px;
+      font-weight:600;
+      cursor:pointer;
+      box-shadow:0 10px 20px rgba(255,107,156,0.5);
+    }
+
+    .error {
+      margin-top:8px;
+      font-size:12px;
+      color:#ffb8c2;
+      min-height:16px;
+    }
+
+    .small-note {
+      margin-top:10px;
+      font-size:11px;
+      color:#8a81b0;
+      text-align:center;
+    }
+
+    @media (max-width:480px) {
+      .login-box {
+        border-radius:16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="big-header">check your flat</div>
+    <div class="tagline">Inspector login (prototype – not for real passwords)</div>
+
+    <div class="logo">
+      <img src="Logo.png" alt="Owl Logo">
+    </div>
+
+    <div class="login-box">
+      <h2>Login</h2>
+      <p>Use your CYF test account.</p>
+
+      <form id="login-form">
+        <div class="field">
+          <label for="username">Username</label>
+          <input id="username" autocomplete="username" required />
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" type="password" autocomplete="current-password" required />
+        </div>
+        <button class="login-btn" type="submit">Log in</button>
+        <div id="error" class="error"></div>
+      </form>
+    </div>
+
+    <div class="small-note">
+      Demo users: Nizzi, Florian, dean
+    </div>
+  </div>
+
+<script>
+  async function loadUsers() {
+    try {
+      const res = await fetch('users.txt', { cache: 'no-store' });
+      if (!res.ok) throw new Error('users.txt not found');
+      const text = await res.text();
+      const users = {};
+      text.split(/\\r?\\n/).forEach(line => {
+        const trimmed = line.trim();
+        if (!trimmed) return;
+        const [u, p] = trimmed.split('|');
+        if (!u || !p) return;
+        users[u.toLowerCase()] = p;
+      });
+      return users;
+    } catch (e) {
+      console.error('Failed to load users.txt', e);
+      return {};
+    }
+  }
+
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errorEl = document.getElementById('error');
+    errorEl.textContent = '';
+
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+
+    if (!username || !password) {
+      errorEl.textContent = 'Please enter username and password.';
+      return;
+    }
+
+    const users = await loadUsers();
+    const stored = users[username.toLowerCase()];
+
+    if (!stored || stored !== password) {
+      errorEl.textContent = 'Wrong username or password.';
+      return;
+    }
+
+    // ✅ login ok → go to main app
+    window.location.href = 'index10.html';
+  });
+</script>
+</body>
+</html>
