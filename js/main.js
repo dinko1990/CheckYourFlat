@@ -657,7 +657,7 @@
       const canvas = document.createElement("canvas");
       canvas.width = img.width;
       canvas.height = img.height;
-      const ctx = signatureCanvas.getContext("2d", { willReadFrequently: true });
+      const ctx = signatureCanvas.getContext("2d");
       ctx.drawImage(img, 0, 0);
       logoImageData = canvas.toDataURL("image/png");
     };
