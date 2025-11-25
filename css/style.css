@@ -74,16 +74,31 @@ body {
   display: none; /* hide label text */
 }
 
+/* Default brand layout (expanded sidebar) */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+/* When sidebar is collapsed: icons-only, brand shrinks to logo only */
+.sidebar.collapsed .brand {
+  justify-content: center;        /* center logo horizontally */
+}
+
+/* Hide ALL brand text when collapsed */
 .sidebar.collapsed .brand-text,
 .sidebar.collapsed .brand-text h1,
 .sidebar.collapsed .brand-text span {
-  display: none !important;
-}
-.sidebar.collapsed .brand-logo {
-  margin: 0 auto;
-  padding: 8px 0;
+  display: none !important;       /* no squeezed h1, no subtitle */
 }
 
+/* Keep logo nice and centered in collapsed mode */
+.sidebar.collapsed .brand-logo {
+  margin: 0 auto;                 /* center in sidebar */
+  padding: 0;                     /* remove extra padding that might push it down */
+}
 
 
 .sidebar-toggle {
