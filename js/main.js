@@ -244,132 +244,146 @@
   const goStep3Btn = document.getElementById("go-step3-btn");
 
   function addFieldRow(field) {
-    const tr = document.createElement("tr");
-    tr.dataset.rowType = "field";
-    tr.dataset.fieldId = field.id;
-
-    const isMandatory = MANDATORY_FIELDS.includes(field.id);
-    if (isMandatory) tr.classList.add("mandatory-row");
-
-    // Column 1: field label (+ delete for custom, but not for template mandatory rows)
-    const descTd = document.createElement("td");
-    descTd.dataset.label = "🧾 Field";
-    descTd.textContent = field.label;
-    tr.appendChild(descTd);
-
-    // Column 2: exposé (read-only)
-    const exposeTd = document.createElement("td");
-    exposeTd.className = "expose-cell";
-    exposeTd.dataset.label = "🏢 Exposé";
-    const exposeValue = EXPOSE_DATA[field.id] || "";
-    exposeTd.textContent = exposeValue;
-    tr.appendChild(exposeTd);
-
-    // Column 3: reality (editable)
-    const realityTd = document.createElement("td");
-    realityTd.className = "editable";
-    realityTd.dataset.label = "✅ Reality";
-
-    const copyBtn = document.createElement("button");
-    copyBtn.type = "button";
-    copyBtn.className = "copy-btn";
-    copyBtn.textContent = "Copy from exposé";
-
-    if (field.type === "text") {
-      const span = document.createElement("span");
-      span.className = "cell-editable";
-      span.contentEditable = "true";
-      span.dataset.placeholder = "Write your inspection result…";
-      span.innerHTML = '<span style="opacity:0.35;">Write your inspection result…</span>';
-
-      span.addEventListener("focus", () => {
-        if (span.querySelector("span")) span.textContent = "";
-      });
-
-      copyBtn.addEventListener("click", () => {
-        span.textContent = exposeValue || "";
-      });
-
-      realityTd.appendChild(copyBtn);
-      realityTd.appendChild(span);
-    } else if (field.type === "select") {
-      const select = document.createElement("select");
-      select.style.width = "100%";
-      select.style.padding = "3px 6px";
-      select.style.borderRadius = "10px";
-      select.style.border = "1px solid #dcd3ff";
-
-      const ph = document.createElement("option");
-      ph.value = "";
-      ph.textContent = "Select…";
-      select.appendChild(ph);
-
-      field.options.forEach(o => {
-        const opt = document.createElement("option");
-        opt.value = o;
-        opt.textContent = o;
-        select.appendChild(opt);
-      });
-
-      copyBtn.addEventListener("click", () => {
-        const val = (exposeValue || "").trim();
-        if (!val) return;
-        const opts = Array.from(select.options);
-        let idx = opts.findIndex(o => o.value === val);
-        if (idx === -1) {
-          idx = opts.findIndex(o => val.toLowerCase().includes(o.value.toLowerCase()));
-        }
-        if (idx >= 0) select.selectedIndex = idx;
-      });
-
-      realityTd.appendChild(copyBtn);
-      realityTd.appendChild(select);
-    }
-
-    tr.appendChild(realityTd);
-    comparisonBody.appendChild(tr);
-  }
-
-  function addCustomTextRow(label) {
   const tr = document.createElement("tr");
-  tr.dataset.rowType = "custom-text";
+  tr.dataset.rowType = "field";
+  tr.dataset.fieldId = field.id;
 
+  const isCustom = field.id.startsWith("custom_");
+  const isMandatory = MANDATORY_FIELDS.includes(field.id);
+  if (isMandatory) tr.classList.add("mandatory-row");
+  if (isCustom) tr.classList.add("custom-row-highlight");
+
+  /* --- COLUMN 1: label (editable for custom rows) --- */
   const descTd = document.createElement("td");
   descTd.dataset.label = "🧾 Field";
-  descTd.textContent = label || "Extra note";
 
-  const trash = document.createElement("button");
-  trash.type = "button";
-  trash.className = "trash-inline";
-  trash.textContent = "🗑";
-  trash.addEventListener("click", () => {
-    if (confirm("Remove this row?")) tr.remove();
-  });
-  descTd.appendChild(trash);
+  if (isCustom) {
+    const labelSpan = document.createElement("span");
+    labelSpan.className = "row-title-editable placeholder";
+    labelSpan.contentEditable = "true";
+    labelSpan.textContent = field.label || "Tap to name this row";
 
-  const exposeTd = document.createElement("td");
-  exposeTd.dataset.label = "🏢 Exposé";
-  exposeTd.className = "expose-cell";
-  exposeTd.textContent = "";
+    function normalizeTitle() {
+      const txt = labelSpan.textContent.replace(/\s+/g, " ").trim();
+      if (!txt) {
+        labelSpan.textContent = "Tap to name this row";
+        labelSpan.classList.add("placeholder");
+      } else {
+        labelSpan.textContent = txt;
+        labelSpan.classList.remove("placeholder");
+      }
+    }
 
-  const realityTd = document.createElement("td");
-  realityTd.dataset.label = "✅ Reality";
-  realityTd.className = "editable";
+    labelSpan.addEventListener("focus", () => {
+      if (labelSpan.classList.contains("placeholder")) {
+        labelSpan.textContent = "";
+      }
+    });
 
-  const span = document.createElement("span");
-  span.className = "cell-editable";
-  span.contentEditable = "true";
-  span.innerHTML = '<span style="opacity:0.35;">Write your inspection result…</span>';
-  span.addEventListener("focus", () => {
-    if (span.querySelector("span")) span.textContent = "";
-  });
-  realityTd.appendChild(span);
+    labelSpan.addEventListener("blur", normalizeTitle);
+    labelSpan.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        labelSpan.blur();
+      }
+    });
+
+    descTd.appendChild(labelSpan);
+
+    // delete button for custom rows
+    const trash = document.createElement("button");
+    trash.type = "button";
+    trash.className = "trash-inline";
+    trash.textContent = "🗑";
+    trash.addEventListener("click", () => {
+      if (confirm("Remove this row?")) tr.remove();
+    });
+    descTd.appendChild(trash);
+
+  } else {
+    // normal template field (non-editable label, no delete)
+    descTd.textContent = field.label;
+  }
 
   tr.appendChild(descTd);
+
+  /* --- COLUMN 2: Exposé (read-only) --- */
+  const exposeTd = document.createElement("td");
+  exposeTd.className = "expose-cell";
+  exposeTd.dataset.label = "🏢 Exposé";
+  const exposeValue = EXPOSE_DATA[field.id] || "";
+  exposeTd.textContent = exposeValue;
   tr.appendChild(exposeTd);
+
+  /* --- COLUMN 3: Reality (editable) --- */
+  const realityTd = document.createElement("td");
+  realityTd.className = "editable";
+  realityTd.dataset.label = "✅ Reality";
+
+  const copyBtn = document.createElement("button");
+  copyBtn.type = "button";
+  copyBtn.className = "copy-btn";
+  copyBtn.textContent = "Copy from exposé";
+
+  if (field.type === "text") {
+    const span = document.createElement("span");
+    span.className = "cell-editable";
+    span.contentEditable = "true";
+    span.innerHTML = '<span style="opacity:0.35;">Write your inspection result…</span>';
+
+    span.addEventListener("focus", () => {
+      if (span.querySelector("span")) span.textContent = "";
+    });
+
+    copyBtn.addEventListener("click", () => {
+      span.textContent = exposeValue || "";
+    });
+
+    realityTd.appendChild(copyBtn);
+    realityTd.appendChild(span);
+
+  } else if (field.type === "select") {
+    const select = document.createElement("select");
+    select.style.width = "100%";
+    select.style.padding = "3px 6px";
+    select.style.borderRadius = "10px";
+    select.style.border = "1px solid #dcd3ff";
+
+    const ph = document.createElement("option");
+    ph.value = "";
+    ph.textContent = "Select…";
+    select.appendChild(ph);
+
+    field.options.forEach(o => {
+      const opt = document.createElement("option");
+      opt.value = o;
+      opt.textContent = o;
+      select.appendChild(opt);
+    });
+
+    copyBtn.addEventListener("click", () => {
+      const val = (exposeValue || "").trim();
+      if (!val) return;
+      const opts = Array.from(select.options);
+      let idx = opts.findIndex(o => o.value === val);
+      if (idx === -1) {
+        idx = opts.findIndex(o => val.toLowerCase().includes(o.value.toLowerCase()));
+      }
+      if (idx >= 0) select.selectedIndex = idx;
+    });
+
+    realityTd.appendChild(copyBtn);
+    realityTd.appendChild(select);
+  }
+
   tr.appendChild(realityTd);
   comparisonBody.appendChild(tr);
+
+  // return row element so caller can focus/scroll
+  return tr;
 }
+
+
 
 
   /* ===== CAMERA / PHOTO ROW ===== */
@@ -416,13 +430,46 @@
     closeCamera();
   });
 
-  function addPhotoRow(label) {
+function addPhotoRow(label) {
   const tr = document.createElement("tr");
   tr.dataset.rowType = "photo";
+  tr.classList.add("custom-row-highlight");
 
+  // Column 1: editable title + delete
   const descTd = document.createElement("td");
   descTd.dataset.label = "🧾 Field";
-  descTd.textContent = label || "Photo / comment";
+
+  const labelSpan = document.createElement("span");
+  labelSpan.className = "row-title-editable placeholder";
+  labelSpan.contentEditable = "true";
+  labelSpan.textContent = label || "Tap to name this row";
+
+  function normalizeTitle() {
+    const txt = labelSpan.textContent.replace(/\s+/g, " ").trim();
+    if (!txt) {
+      labelSpan.textContent = "Tap to name this row";
+      labelSpan.classList.add("placeholder");
+    } else {
+      labelSpan.textContent = txt;
+      labelSpan.classList.remove("placeholder");
+    }
+  }
+
+  labelSpan.addEventListener("focus", () => {
+    if (labelSpan.classList.contains("placeholder")) {
+      labelSpan.textContent = "";
+    }
+  });
+
+  labelSpan.addEventListener("blur", normalizeTitle);
+  labelSpan.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      labelSpan.blur();
+    }
+  });
+
+  descTd.appendChild(labelSpan);
 
   const trash = document.createElement("button");
   trash.type = "button";
@@ -433,11 +480,15 @@
   });
   descTd.appendChild(trash);
 
+  // Column 2: exposé (empty)
   const exposeTd = document.createElement("td");
   exposeTd.dataset.label = "🏢 Exposé";
   exposeTd.className = "expose-cell";
   exposeTd.textContent = "";
+  tr.appendChild(descTd);
+  tr.appendChild(exposeTd);
 
+  // Column 3: photo + comment (same as your existing logic)
   const realityTd = document.createElement("td");
   realityTd.dataset.label = "✅ Reality";
   realityTd.className = "editable";
@@ -489,25 +540,49 @@
   wrapper.appendChild(textarea);
   realityTd.appendChild(wrapper);
 
-  tr.appendChild(descTd);
-  tr.appendChild(exposeTd);
   tr.appendChild(realityTd);
   comparisonBody.appendChild(tr);
+
+  return tr;
 }
 
 
-  function buildTable() {
-    comparisonBody.innerHTML = "";
-    inspectionFields.forEach(addFieldRow);
+  const tr = addFieldRow(field);
+  if (!tr) return;
+
+  // focus the title on creation so user can't miss it
+  const titleEl = tr.querySelector(".row-title-editable");
+  if (titleEl) {
+    titleEl.focus();
+
+    // select all text if any (tiny UX nicety)
+    const range = document.createRange();
+    range.selectNodeContents(titleEl);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
   }
 
-addTextRowBtn.addEventListener("click", () => {
-  const label = prompt("New row title:", "Extra note");
-  if (!label) return;
-  addCustomTextRow(label.trim());
+  tr.scrollIntoView({ behavior: "smooth", block: "center" });
 });
 
-  addPhotoRowBtn.addEventListener("click", addPhotoRow);
+addPhotoRowBtn.addEventListener("click", () => {
+  const label = "";  // start blank, use placeholder
+  const tr = addPhotoRow(label);
+  if (!tr) return;
+
+  const titleEl = tr.querySelector(".row-title-editable");
+  if (titleEl) {
+    titleEl.focus();
+    const range = document.createRange();
+    range.selectNodeContents(titleEl);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+
+  tr.scrollIntoView({ behavior: "smooth", block: "center" });
+});
 
   resetExampleBtn.addEventListener("click", () => {
     if (!confirm("Reset to template rows & fake Berlin exposé?")) return;
@@ -761,40 +836,61 @@ addTextRowBtn.addEventListener("click", () => {
     let y = metaY + 9;
     const lineHeight = 5;
 
-    // Collect rows
-    const rows = [];
-    comparisonBody.querySelectorAll("tr").forEach(tr => {
-      const type = tr.dataset.rowType || "field";
-      const cells = tr.querySelectorAll("td");
+// Collect rows
+const rows = [];
 
-      let desc = "";
-      if (cells[0]) {
-        const firstNode = cells[0].childNodes[0];
-        desc = (firstNode && firstNode.textContent ? firstNode.textContent : "").trim();
-      }
+comparisonBody.querySelectorAll("tr").forEach(tr => {
+  const type = tr.dataset.rowType || "field";
+  const cells = tr.querySelectorAll("td");
 
-      let reality = "";
-      let photoData = null;
+  /* --- DESCRIPTION / TITLE --- */
+  let desc = "";
 
-      if (type === "photo") {
-        const img = tr.querySelector(".photo-preview");
-        const textarea = tr.querySelector(".photo-comment");
-        if (textarea) reality = (textarea.value || "").trim();
-        if (img && img.src && img.style.display !== "none") {
-          photoData = img.src;
-        }
-      } else {
-        const span = tr.querySelector("td.editable .cell-editable");
-        const select = tr.querySelector("td.editable select");
-        if (span) reality = (span.textContent || "").replace(/\s+/g, " ").trim();
-        if (select && select.value) {
-          reality = select.value;
-        }
-      }
+  if (cells[0]) {
+    // Prefer editable title span
+    const labelSpan = cells[0].querySelector(".row-title-editable");
+    if (labelSpan) {
+      desc = labelSpan.textContent.trim();
+    } else {
+      // Fallback: first column text (remove trash icon)
+      desc = cells[0].cloneNode(true).textContent.replace("🗑", "").trim();
+    }
+  }
 
-      if (!desc && !reality && !photoData) return;
-      rows.push({ type, desc, reality, photoData });
-    });
+  /* --- REALITY & PHOTO DATA --- */
+  let reality = "";
+  let photoData = null;
+
+  if (type === "photo") {
+    const img = tr.querySelector(".photo-preview");
+    const textarea = tr.querySelector(".photo-comment");
+
+    if (textarea) {
+      reality = (textarea.value || "").trim();
+    }
+
+    if (img && img.src && img.style.display !== "none") {
+      photoData = img.src;
+    }
+
+  } else {
+    const span = tr.querySelector("td.editable .cell-editable");
+    const select = tr.querySelector("td.editable select");
+
+    if (span) {
+      reality = (span.textContent || "").replace(/\s+/g, " ").trim();
+    }
+    if (select && select.value) {
+      reality = select.value;
+    }
+  }
+
+  // Skip empty rows
+  if (!desc && !reality && !photoData) return;
+
+  rows.push({ type, desc, reality, photoData });
+});
+
 
     rows.forEach(row => {
       if (y > 270) {
