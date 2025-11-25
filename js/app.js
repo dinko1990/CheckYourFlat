@@ -276,6 +276,30 @@ function initFileUpload() {
     }
     fileInfo.textContent = `Loaded: ${file.name}`;
     // TODO: here is where you'd parse the real PDF and call fillExposeFromData(parsedExpose)
+    
+    function fillExposeFromData(data) {
+    inspectionFields.forEach((field) => {
+    const id    = field.id;
+    const value = Object.prototype.hasOwnProperty.call(data, id) ? data[id] : null;
+    const row   = getRowByFieldId(id);
+    if (!row) return;
+
+    const exposeEl = row.querySelector(".expose-input");
+    if (!exposeEl) return;
+
+    // Set value
+    if (exposeEl.tagName === "SELECT") {
+      exposeEl.value = value ?? "unbekannt";
+    } else {
+      exposeEl.value = value ?? "";
+    }
+
+    // Lock it
+    exposeEl.disabled = true;
+    exposeEl.classList.add("locked-expose");
+  });
+}
+    
     unlockStep2();
     goToStep(2);
   }
