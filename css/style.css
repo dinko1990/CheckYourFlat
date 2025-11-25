@@ -228,7 +228,7 @@ body {
   background: rgba(125, 92, 255, 0.09);
 }
 .steps-inner button.active {
-  background: linear-gradient(135deg, #7d5cff, #ff6b6b);
+  background: linear-gradient(135deg, #ffc977, #ff88ae);
   color: #fff;
   transform: translateY(-1px);
 }
