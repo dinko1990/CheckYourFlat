@@ -319,7 +319,7 @@ body {
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
-  background: linear-gradient(135deg, #7d5cff, #ff6b6b);
+  background: linear-gradient(135deg, #ffb85c, #ff6b6b); /* orange → pink/purple */
   color: #fff;
   box-shadow: 0 10px 20px rgba(71, 32, 149, 0.35);
 }
