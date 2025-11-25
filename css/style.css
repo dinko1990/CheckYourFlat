@@ -528,7 +528,7 @@ body {
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  background: linear-gradient(135deg, #7d5cff, #ff6b6b);
+  background: linear-gradient(135deg, #ffb85c, #ff6b6b); /* same gradient */
   color: #fff;
   box-shadow: 0 12px 24px rgba(58, 20, 125, 0.4);
 }
