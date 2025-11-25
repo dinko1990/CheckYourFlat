@@ -74,14 +74,11 @@ body {
   display: none; /* hide label text */
 }
 
-.sidebar.collapsed nav .brand-text span:not(.icon) {
-  display: none; /* hide label text */
+.sidebar.collapsed .brand-text,
+.sidebar.collapsed .brand-text h1,
+.sidebar.collapsed .brand-text span {
+  display: none !important;
 }
-
-.sidebar.collapsed nav .brand-text span:not(.icon) {
-  display: none; /* hide label text */
-}
-
 
 
 
