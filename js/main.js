@@ -836,90 +836,95 @@ addPhotoRowBtn.addEventListener("click", () => {
     let y = metaY + 9;
     const lineHeight = 5;
 
-// Collect rows
-const rows = [];
 
-comparisonBody.querySelectorAll("tr").forEach(tr => {
-  const type = tr.dataset.rowType || "field";
-  const cells = tr.querySelectorAll("td");
 
-  /* --- DESCRIPTION / TITLE --- */
-  let desc = "";
+  // Collect rows
+  const rows = [];
 
-  if (cells[0]) {
-    // Prefer editable title span
-    const labelSpan = cells[0].querySelector(".row-title-editable");
-    if (labelSpan) {
-      desc = labelSpan.textContent.trim();
+  comparisonBody.querySelectorAll("tr").forEach(tr => {
+    const type = tr.dataset.rowType || "field";
+    const cells = tr.querySelectorAll("td");
+
+    /* --- DESCRIPTION / TITLE --- */
+    let desc = "";
+
+    if (cells[0]) {
+      // Prefer editable title span
+      const labelSpan = cells[0].querySelector(".row-title-editable");
+      if (labelSpan) {
+        desc = labelSpan.textContent.trim();
+      } else {
+        // Fallback: first column text (remove trash icon)
+        desc = cells[0].cloneNode(true).textContent.replace("🗑", "").trim();
+      }
+    }
+
+    /* --- REALITY & PHOTO DATA --- */
+    let reality = "";
+    let photoData = null;
+
+    if (type === "photo") {
+      const img = tr.querySelector(".photo-preview");
+      const textarea = tr.querySelector(".photo-comment");
+
+      if (textarea) {
+        reality = (textarea.value || "").trim();
+      }
+
+      if (img && img.src && img.style.display !== "none") {
+        photoData = img.src;
+      }
+
     } else {
-      // Fallback: first column text (remove trash icon)
-      desc = cells[0].cloneNode(true).textContent.replace("🗑", "").trim();
-    }
-  }
+      const span = tr.querySelector("td.editable .cell-editable");
+      const select = tr.querySelector("td.editable select");
 
-  /* --- REALITY & PHOTO DATA --- */
-  let reality = "";
-  let photoData = null;
-
-  if (type === "photo") {
-    const img = tr.querySelector(".photo-preview");
-    const textarea = tr.querySelector(".photo-comment");
-
-    if (textarea) {
-      reality = (textarea.value || "").trim();
+      if (span) {
+        reality = (span.textContent || "").replace(/\s+/g, " ").trim();
+      }
+      if (select && select.value) {
+        reality = select.value;
+      }
     }
 
-    if (img && img.src && img.style.display !== "none") {
-      photoData = img.src;
+    // Skip empty rows
+    if (!desc && !reality && !photoData) return;
+
+    rows.push({ type, desc, reality, photoData });
+  });
+
+  // Render rows into PDF
+  rows.forEach(row => {
+    if (y > 270) {
+      doc.addPage();
+      y = 20;
     }
 
-  } else {
-    const span = tr.querySelector("td.editable .cell-editable");
-    const select = tr.querySelector("td.editable select");
+    doc.setFont("helvetica", "bold");
+    doc.text("• " + row.desc, 12, y);
+    y += lineHeight;
 
-    if (span) {
-      reality = (span.textContent || "").replace(/\s+/g, " ").trim();
+    if (row.reality) {
+      doc.setFont("helvetica", "normal");
+      const textLines = doc.splitTextToSize(row.reality, 180);
+      doc.text(textLines, 18, y);
+      y += lineHeight + (textLines.length - 1) * lineHeight;
     }
-    if (select && select.value) {
-      reality = select.value;
-    }
-  }
 
-  // Skip empty rows
-  if (!desc && !reality && !photoData) return;
-
-  rows.push({ type, desc, reality, photoData });
-});
-
-
-    rows.forEach(row => {
-      if (y > 270) {
+    if (row.photoData) {
+      const imgWidth = 60;
+      const imgHeight = 45;
+      if (y + imgHeight > 270) {
         doc.addPage();
         y = 20;
       }
+      doc.addImage(row.photoData, "JPEG", 18, y, imgWidth, imgHeight);
+      y += imgHeight + lineHeight;
+    }
+  });
 
-      doc.setFont("helvetica", "bold");
-      doc.text("• " + row.desc, 12, y);
-      y += lineHeight;
 
-      if (row.reality) {
-        doc.setFont("helvetica", "normal");
-        const textLines = doc.splitTextToSize(row.reality, 180);
-        doc.text(textLines, 18, y);
-        y += lineHeight + (textLines.length - 1) * lineHeight;
-      }
-
-      if (row.photoData) {
-        const imgWidth = 60;
-        const imgHeight = 45;
-        if (y + imgHeight > 270) {
-          doc.addPage();
-          y = 20;
-        }
-        doc.addImage(row.photoData, "JPEG", 18, y, imgWidth, imgHeight);
-        y += imgHeight + lineHeight;
-      }
-    });
+    
 
     // Signature
     const sigData = signatureCanvas.toDataURL("image/png");
@@ -1017,7 +1022,7 @@ comparisonBody.querySelectorAll("tr").forEach(tr => {
 
       const title = document.createElement("div");
       title.textContent = item.filename;
-    }
+
       const meta = document.createElement("div");
       meta.className = "history-meta";
       meta.textContent = (item.address || "") + " • " + item.when +
