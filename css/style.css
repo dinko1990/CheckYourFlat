@@ -63,6 +63,13 @@ body {
   font-size: 11px;
   opacity: 0.7;
 }
+
+/* Sidebar collapsed: icons only */
+.sidebar.collapsed nav .nav-item {
+  justify-content: center;
+  padding-inline: 0;
+}
+
 .sidebar.collapsed nav .nav-item span:not(.icon) {
   display: none; /* hide label text */
 }
