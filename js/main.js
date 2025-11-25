@@ -248,66 +248,16 @@
     tr.dataset.rowType = "field";
     tr.dataset.fieldId = field.id;
 
-    const isCustom = field.id.startsWith("custom_");
     const isMandatory = MANDATORY_FIELDS.includes(field.id);
     if (isMandatory) tr.classList.add("mandatory-row");
-    if (isCustom) tr.classList.add("custom-row-highlight");
 
-    /* --- COLUMN 1: label (editable for custom rows) --- */
+    // Column 1: field label (+ delete for custom, but not for template mandatory rows)
     const descTd = document.createElement("td");
     descTd.dataset.label = "🧾 Field";
-
-    if (isCustom) {
-      const labelSpan = document.createElement("span");
-      labelSpan.className = "row-title-editable placeholder";
-      labelSpan.contentEditable = "true";
-      labelSpan.textContent = field.label || "Tap to name this row";
-
-      function normalizeTitle() {
-        const txt = labelSpan.textContent.replace(/\s+/g, " ").trim();
-        if (!txt) {
-          labelSpan.textContent = "Tap to name this row";
-          labelSpan.classList.add("placeholder");
-        } else {
-          labelSpan.textContent = txt;
-          labelSpan.classList.remove("placeholder");
-        }
-      }
-
-      labelSpan.addEventListener("focus", () => {
-        if (labelSpan.classList.contains("placeholder")) {
-          labelSpan.textContent = "";
-        }
-      });
-
-      labelSpan.addEventListener("blur", normalizeTitle);
-      labelSpan.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          labelSpan.blur();
-        }
-      });
-
-      descTd.appendChild(labelSpan);
-
-      // delete button for custom rows
-      const trash = document.createElement("button");
-      trash.type = "button";
-      trash.className = "trash-inline";
-      trash.textContent = "🗑";
-      trash.addEventListener("click", () => {
-        if (confirm("Remove this row?")) tr.remove();
-      });
-      descTd.appendChild(trash);
-
-    } else {
-      // normal template field (non-editable label, no delete)
-      descTd.textContent = field.label;
-    }
-
+    descTd.textContent = field.label;
     tr.appendChild(descTd);
 
-    /* --- COLUMN 2: Exposé (read-only) --- */
+    // Column 2: exposé (read-only)
     const exposeTd = document.createElement("td");
     exposeTd.className = "expose-cell";
     exposeTd.dataset.label = "🏢 Exposé";
@@ -315,7 +265,7 @@
     exposeTd.textContent = exposeValue;
     tr.appendChild(exposeTd);
 
-    /* --- COLUMN 3: Reality (editable) --- */
+    // Column 3: reality (editable)
     const realityTd = document.createElement("td");
     realityTd.className = "editable";
     realityTd.dataset.label = "✅ Reality";
@@ -329,6 +279,7 @@
       const span = document.createElement("span");
       span.className = "cell-editable";
       span.contentEditable = "true";
+      span.dataset.placeholder = "Write your inspection result…";
       span.innerHTML = '<span style="opacity:0.35;">Write your inspection result…</span>';
 
       span.addEventListener("focus", () => {
@@ -341,7 +292,6 @@
 
       realityTd.appendChild(copyBtn);
       realityTd.appendChild(span);
-
     } else if (field.type === "select") {
       const select = document.createElement("select");
       select.style.width = "100%";
@@ -378,10 +328,49 @@
 
     tr.appendChild(realityTd);
     comparisonBody.appendChild(tr);
-
-    // return row element so caller can focus/scroll
-    return tr;
   }
+
+  function addCustomTextRow(label) {
+  const tr = document.createElement("tr");
+  tr.dataset.rowType = "custom-text";
+
+  const descTd = document.createElement("td");
+  descTd.dataset.label = "🧾 Field";
+  descTd.textContent = label || "Extra note";
+
+  const trash = document.createElement("button");
+  trash.type = "button";
+  trash.className = "trash-inline";
+  trash.textContent = "🗑";
+  trash.addEventListener("click", () => {
+    if (confirm("Remove this row?")) tr.remove();
+  });
+  descTd.appendChild(trash);
+
+  const exposeTd = document.createElement("td");
+  exposeTd.dataset.label = "🏢 Exposé";
+  exposeTd.className = "expose-cell";
+  exposeTd.textContent = "";
+
+  const realityTd = document.createElement("td");
+  realityTd.dataset.label = "✅ Reality";
+  realityTd.className = "editable";
+
+  const span = document.createElement("span");
+  span.className = "cell-editable";
+  span.contentEditable = "true";
+  span.innerHTML = '<span style="opacity:0.35;">Write your inspection result…</span>';
+  span.addEventListener("focus", () => {
+    if (span.querySelector("span")) span.textContent = "";
+  });
+  realityTd.appendChild(span);
+
+  tr.appendChild(descTd);
+  tr.appendChild(exposeTd);
+  tr.appendChild(realityTd);
+  comparisonBody.appendChild(tr);
+}
+
 
   /* ===== CAMERA / PHOTO ROW ===== */
   const cameraModal = document.getElementById("camera-modal");
@@ -428,166 +417,97 @@
   });
 
   function addPhotoRow(label) {
-    const tr = document.createElement("tr");
-    tr.dataset.rowType = "photo";
-    tr.classList.add("custom-row-highlight");
+  const tr = document.createElement("tr");
+  tr.dataset.rowType = "photo";
 
-    // Column 1: editable title + delete
-    const descTd = document.createElement("td");
-    descTd.dataset.label = "🧾 Field";
+  const descTd = document.createElement("td");
+  descTd.dataset.label = "🧾 Field";
+  descTd.textContent = label || "Photo / comment";
 
-    const labelSpan = document.createElement("span");
-    labelSpan.className = "row-title-editable placeholder";
-    labelSpan.contentEditable = "true";
-    labelSpan.textContent = label || "Tap to name this row";
+  const trash = document.createElement("button");
+  trash.type = "button";
+  trash.className = "trash-inline";
+  trash.textContent = "🗑";
+  trash.addEventListener("click", () => {
+    if (confirm("Remove this photo row?")) tr.remove();
+  });
+  descTd.appendChild(trash);
 
-    function normalizeTitle() {
-      const txt = labelSpan.textContent.replace(/\s+/g, " ").trim();
-      if (!txt) {
-        labelSpan.textContent = "Tap to name this row";
-        labelSpan.classList.add("placeholder");
-      } else {
-        labelSpan.textContent = txt;
-        labelSpan.classList.remove("placeholder");
-      }
-    }
+  const exposeTd = document.createElement("td");
+  exposeTd.dataset.label = "🏢 Exposé";
+  exposeTd.className = "expose-cell";
+  exposeTd.textContent = "";
 
-    labelSpan.addEventListener("focus", () => {
-      if (labelSpan.classList.contains("placeholder")) {
-        labelSpan.textContent = "";
-      }
-    });
+  const realityTd = document.createElement("td");
+  realityTd.dataset.label = "✅ Reality";
+  realityTd.className = "editable";
 
-    labelSpan.addEventListener("blur", normalizeTitle);
-    labelSpan.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        labelSpan.blur();
-      }
-    });
+  const wrapper = document.createElement("div");
+  wrapper.className = "photo-wrapper";
 
-    descTd.appendChild(labelSpan);
+  const img = document.createElement("img");
+  img.className = "photo-preview";
+  img.style.display = "none";
 
-    const trash = document.createElement("button");
-    trash.type = "button";
-    trash.className = "trash-inline";
-    trash.textContent = "🗑";
-    trash.addEventListener("click", () => {
-      if (confirm("Remove this photo row?")) tr.remove();
-    });
-    descTd.appendChild(trash);
+  const actions = document.createElement("div");
+  actions.className = "photo-actions";
 
-    // Column 2: exposé (empty)
-    const exposeTd = document.createElement("td");
-    exposeTd.dataset.label = "🏢 Exposé";
-    exposeTd.className = "expose-cell";
-    exposeTd.textContent = "";
-    tr.appendChild(descTd);
-    tr.appendChild(exposeTd);
+  const uploadBtn = document.createElement("button");
+  uploadBtn.type = "button";
+  uploadBtn.textContent = "Upload photo";
+  const fileInput = document.createElement("input");
+  fileInput.type = "file";
+  fileInput.accept = "image/*";
+  fileInput.style.display = "none";
+  uploadBtn.addEventListener("click", () => fileInput.click());
+  fileInput.addEventListener("change", e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      img.src = ev.target.result;
+      img.style.display = "block";
+    };
+    reader.readAsDataURL(f);
+  });
 
-    // Column 3: photo + comment (same as your existing logic)
-    const realityTd = document.createElement("td");
-    realityTd.dataset.label = "✅ Reality";
-    realityTd.className = "editable";
+  const cameraBtn = document.createElement("button");
+  cameraBtn.type = "button";
+  cameraBtn.textContent = "Use camera";
+  cameraBtn.addEventListener("click", () => openCamera(img));
 
-    const wrapper = document.createElement("div");
-    wrapper.className = "photo-wrapper";
+  actions.appendChild(uploadBtn);
+  actions.appendChild(cameraBtn);
+  actions.appendChild(fileInput);
 
-    const img = document.createElement("img");
-    img.className = "photo-preview";
-    img.style.display = "none";
+  const textarea = document.createElement("textarea");
+  textarea.className = "photo-comment";
+  textarea.placeholder = "Comment (optional)…";
 
-    const actions = document.createElement("div");
-    actions.className = "photo-actions";
+  wrapper.appendChild(img);
+  wrapper.appendChild(actions);
+  wrapper.appendChild(textarea);
+  realityTd.appendChild(wrapper);
 
-    const uploadBtn = document.createElement("button");
-    uploadBtn.type = "button";
-    uploadBtn.textContent = "Upload photo";
-    const fileInput = document.createElement("input");
-    fileInput.type = "file";
-    fileInput.accept = "image/*";
-    fileInput.style.display = "none";
-    uploadBtn.addEventListener("click", () => fileInput.click());
-    fileInput.addEventListener("change", e => {
-      const f = e.target.files[0];
-      if (!f) return;
-      const reader = new FileReader();
-      reader.onload = ev => {
-        img.src = ev.target.result;
-        img.style.display = "block";
-      };
-      reader.readAsDataURL(f);
-    });
+  tr.appendChild(descTd);
+  tr.appendChild(exposeTd);
+  tr.appendChild(realityTd);
+  comparisonBody.appendChild(tr);
+}
 
-    const cameraBtn = document.createElement("button");
-    cameraBtn.type = "button";
-    cameraBtn.textContent = "Use camera";
-    cameraBtn.addEventListener("click", () => openCamera(img));
 
-    actions.appendChild(uploadBtn);
-    actions.appendChild(cameraBtn);
-    actions.appendChild(fileInput);
-
-    const textarea = document.createElement("textarea");
-    textarea.className = "photo-comment";
-    textarea.placeholder = "Comment (optional)…";
-
-    wrapper.appendChild(img);
-    wrapper.appendChild(actions);
-    wrapper.appendChild(textarea);
-    realityTd.appendChild(wrapper);
-
-    tr.appendChild(realityTd);
-    comparisonBody.appendChild(tr);
-
-    return tr;
+  function buildTable() {
+    comparisonBody.innerHTML = "";
+    inspectionFields.forEach(addFieldRow);
   }
 
-  // ADD CUSTOM TEXT ROW
-  addTextRowBtn.addEventListener("click", () => {
-    const field = {
-      id: "custom_" + Date.now(),
-      label: "",
-      type: "text"
-    };
+addTextRowBtn.addEventListener("click", () => {
+  const label = prompt("New row title:", "Extra note");
+  if (!label) return;
+  addCustomTextRow(label.trim());
+});
 
-    const tr = addFieldRow(field);
-    if (!tr) return;
-
-    // focus the title on creation so user can't miss it
-    const titleEl = tr.querySelector(".row-title-editable");
-    if (titleEl) {
-      titleEl.focus();
-
-      // select all text if any (tiny UX nicety)
-      const range = document.createRange();
-      range.selectNodeContents(titleEl);
-      const sel = window.getSelection();
-      sel.removeAllRanges();
-      sel.addRange(range);
-    }
-
-    tr.scrollIntoView({ behavior: "smooth", block: "center" });
-  });
-
-  // ADD PHOTO ROW
-  addPhotoRowBtn.addEventListener("click", () => {
-    const label = "";  // start blank, use placeholder
-    const tr = addPhotoRow(label);
-    if (!tr) return;
-
-    const titleEl = tr.querySelector(".row-title-editable");
-    if (titleEl) {
-      titleEl.focus();
-      const range = document.createRange();
-      range.selectNodeContents(titleEl);
-      const sel = window.getSelection();
-      sel.removeAllRanges();
-      sel.addRange(range);
-    }
-
-    tr.scrollIntoView({ behavior: "smooth", block: "center" });
-  });
+  addPhotoRowBtn.addEventListener("click", addPhotoRow);
 
   resetExampleBtn.addEventListener("click", () => {
     if (!confirm("Reset to template rows & fake Berlin exposé?")) return;
@@ -843,60 +763,39 @@
 
     // Collect rows
     const rows = [];
-
     comparisonBody.querySelectorAll("tr").forEach(tr => {
       const type = tr.dataset.rowType || "field";
       const cells = tr.querySelectorAll("td");
 
-      /* --- DESCRIPTION / TITLE --- */
       let desc = "";
-
       if (cells[0]) {
-        // Prefer editable title span
-        const labelSpan = cells[0].querySelector(".row-title-editable");
-        if (labelSpan) {
-          desc = labelSpan.textContent.trim();
-        } else {
-          // Fallback: first column text (remove trash icon)
-          desc = cells[0].cloneNode(true).textContent.replace("🗑", "").trim();
-        }
+        const firstNode = cells[0].childNodes[0];
+        desc = (firstNode && firstNode.textContent ? firstNode.textContent : "").trim();
       }
 
-      /* --- REALITY & PHOTO DATA --- */
       let reality = "";
       let photoData = null;
 
       if (type === "photo") {
         const img = tr.querySelector(".photo-preview");
         const textarea = tr.querySelector(".photo-comment");
-
-        if (textarea) {
-          reality = (textarea.value || "").trim();
-        }
-
+        if (textarea) reality = (textarea.value || "").trim();
         if (img && img.src && img.style.display !== "none") {
           photoData = img.src;
         }
-
       } else {
         const span = tr.querySelector("td.editable .cell-editable");
         const select = tr.querySelector("td.editable select");
-
-        if (span) {
-          reality = (span.textContent || "").replace(/\s+/g, " ").trim();
-        }
+        if (span) reality = (span.textContent || "").replace(/\s+/g, " ").trim();
         if (select && select.value) {
           reality = select.value;
         }
       }
 
-      // Skip empty rows
       if (!desc && !reality && !photoData) return;
-
       rows.push({ type, desc, reality, photoData });
     });
 
-    // Render rows into PDF
     rows.forEach(row => {
       if (y > 270) {
         doc.addPage();
