@@ -330,46 +330,19 @@
     comparisonBody.appendChild(tr);
   }
 
-  function addCustomTextRow(label) {
-  const tr = document.createElement("tr");
-  tr.dataset.rowType = "custom-text";
+ addTextRowBtn.addEventListener("click", () => {
+  const label = prompt("New row title:", "Extra note");
+  if (!label) return;
 
-  const descTd = document.createElement("td");
-  descTd.dataset.label = "🧾 Field";
-  descTd.textContent = label || "Extra note";
+  const field = {
+    id: "custom_" + Date.now(),
+    label: label.trim(),
+    type: "text"
+  };
 
-  const trash = document.createElement("button");
-  trash.type = "button";
-  trash.className = "trash-inline";
-  trash.textContent = "🗑";
-  trash.addEventListener("click", () => {
-    if (confirm("Remove this row?")) tr.remove();
-  });
-  descTd.appendChild(trash);
+  addFieldRow(field);
+});
 
-  const exposeTd = document.createElement("td");
-  exposeTd.dataset.label = "🏢 Exposé";
-  exposeTd.className = "expose-cell";
-  exposeTd.textContent = "";
-
-  const realityTd = document.createElement("td");
-  realityTd.dataset.label = "✅ Reality";
-  realityTd.className = "editable";
-
-  const span = document.createElement("span");
-  span.className = "cell-editable";
-  span.contentEditable = "true";
-  span.innerHTML = '<span style="opacity:0.35;">Write your inspection result…</span>';
-  span.addEventListener("focus", () => {
-    if (span.querySelector("span")) span.textContent = "";
-  });
-  realityTd.appendChild(span);
-
-  tr.appendChild(descTd);
-  tr.appendChild(exposeTd);
-  tr.appendChild(realityTd);
-  comparisonBody.appendChild(tr);
-}
 
 
   /* ===== CAMERA / PHOTO ROW ===== */
