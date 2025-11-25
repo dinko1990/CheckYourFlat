@@ -231,7 +231,7 @@ body {
   display: flex;
   justify-content: center; /* center instead of right */
   margin-bottom: 10px;
-  background:#241238
+  background:#241238;
 }
 
 .steps-inner {
