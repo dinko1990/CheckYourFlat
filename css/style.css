@@ -64,15 +64,9 @@ body {
   opacity: 0.7;
 }
 
-/* Sidebar collapsed: icons only */
-.sidebar.collapsed nav .nav-item {
-  justify-content: center;
-  padding-inline: 0;
-}
-
-.sidebar.collapsed nav .nav-item span:not(.icon) {
-  display: none; /* hide label text */
-}
+/* ----------------------------------------
+   SIDEBAR (EXPANDED & COLLAPSED)
+   ---------------------------------------- */
 
 /* Default brand layout (expanded sidebar) */
 .brand {
@@ -82,24 +76,32 @@ body {
   margin-bottom: 24px;
 }
 
-/* When sidebar is collapsed: icons-only, brand shrinks to logo only */
+/* Collapse mode: shrink brand container */
 .sidebar.collapsed .brand {
-  justify-content: center;        /* center logo horizontally */
+  justify-content: center;     /* center logo */
 }
 
-/* Hide ALL brand text when collapsed */
-.sidebar.collapsed .brand-text,
-.sidebar.collapsed .brand-text h1,
-.sidebar.collapsed .brand-text span {
-  display: none !important;       /* no squeezed h1, no subtitle */
+/* When sidebar collapsed → hide ALL text */
+.sidebar.collapsed .brand-text {
+  display: none !important;
 }
 
-/* Keep logo nice and centered in collapsed mode */
+/* Keep only the logo in collapsed mode */
 .sidebar.collapsed .brand-logo {
-  margin: 0 auto;                 /* center in sidebar */
-  padding: 0;                     /* remove extra padding that might push it down */
+  margin: 0 auto;
+  padding: 0;
 }
 
+/* Collapse → navigation icons centered */
+.sidebar.collapsed nav .nav-item {
+  justify-content: center;
+  padding-inline: 0;
+}
+
+/* Collapse → hide navigation labels (text) */
+.sidebar.collapsed nav .nav-item span:not(.icon) {
+  display: none !important;
+}
 
 .sidebar-toggle {
   position: absolute;
