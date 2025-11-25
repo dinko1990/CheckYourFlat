@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Check Your Flat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="icon" href="Logo.png" />
+  <link rel="stylesheet" href="./css/style.css" />
+
+  <!-- jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <script src="./js/app.js" defer></script>
+</head>
+
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-logo">
+        <img src="Logo.png" alt="CYF Logo">
+      </div>
+      <div class="brand-text">
+        <h1>Check Your Flat</h1>
+        <span>Inspector view – Berlin</span>
+      </div>
+    </div>
+
+    <button id="sidebar-toggle" class="sidebar-toggle">«</button>
+
+    <nav>
+      <button class="nav-item active" data-view="new">
+        <span class="icon">➕</span> New Inspection
+      </button>
+      <button class="nav-item" data-view="history">
+        <span class="icon">📂</span> History
+      </button>
+      <button class="nav-item nav-logout" data-view="logout">
+        <span class="icon">🚪</span> Logout
+      </button>
+    </nav>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <header class="hero">
+      <div class="hero-badge">
+        <span class="icon">✅</span> Compare reality vs exposé with photos & signature.
+      </div>
+
+      <h1 class="hero-title">check your flat</h1>
+
+      <p class="hero-subtitle">
+        Upload the exposé, walk through the flat, compare reality vs listing,
+        add photos, sign and export your PDF report — all from your phone.
+      </p>
+      <div class="hero-wave"></div>
+    </header>
+
+    <section class="content">
+      <div class="card-shell">
+
+        <!-- Steps bar -->
+        <div class="steps-floating" id="steps-floating">
+          <div class="steps-inner">
+            <button data-step="1" class="active unlocked">1</button>
+            <button data-step="2" disabled>2</button>
+            <button data-step="3" disabled>3</button>
+          </div>
+        </div>
+
+        <!-- Mobile menu -->
+        <div class="mobile-left-menu" id="mobile-left-menu">
+          <button id="mobile-left-toggle" class="mobile-left-toggle">☰</button>
+          <div class="mobile-left-items">
+            <button id="nav-new-expose">New exposé</button>
+            <button id="nav-history">History</button>
+            <button id="nav-logout-mobile">Logout</button>
+          </div>
+        </div>
+
+        <!-- STEP 1 -->
+        <section class="card" id="step1-card">
+          <div class="step-header">
+            <div class="step-title">
+              <span class="step-chip">1</span>
+              Upload exposé (PDF)
+              <span class="step-badge">Start here</span>
+            </div>
+            <div class="step-help">After loading, step 2 unlocks.</div>
+          </div>
+
+          <div id="drop-area" class="drop-area">
+            <h3>Drop the exposé PDF here</h3>
+            <p>or choose a file</p>
+
+            <button type="button" id="select-file-btn" class="upload-btn-main">Browse file</button>
+            <input type="file" id="file-input" accept="application/pdf" style="display:none;" />
+
+            <div id="file-info" class="file-info">No file loaded yet.</div>
+
+            <div id="load-example-btn" class="example-chip">
+              🏙️ Load fake Berlin exposé (Kantstraße 123)
+            </div>
+          </div>
+        </section>
+
+        <!-- STEP 2 -->
+        <section class="card step-disabled" id="step2-card">
+          <div class="step-header">
+            <div class="step-title">
+              <span class="step-chip">2</span>
+              Maske Inspektion – Reality vs Exposé
+              <span class="step-badge">Mandatory fields *</span>
+            </div>
+            <div class="step-help">
+              Fill the reality column. “Copy from exposé” is optional.
+            </div>
+          </div>
+
+          <div class="table-wrapper">
+            <table id="comparison-table">
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>🏢 Exposé</th>
+                  <th>✅ Reality</th>
+                </tr>
+              </thead>
+              <tbody id="comparison-body"></tbody>
+            </table>
+
+            <div class="table-actions">
+              <div>
+                <button id="add-text-row-btn" class="btn-chip">＋ Add custom text row</button>
+                <button id="add-photo-row-btn" class="btn-chip">📷 Add photo row</button>
+              </div>
+              <div>
+                <button id="reset-example-btn" class="btn-chip primary">Reset from example</button>
+                <button id="mock-autofill-btn" class="btn-chip mock">🧪 Auto-fill sample notes</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="right">
+            <button id="go-step3-btn" class="btn-primary">
+              Continue to Step 3 (PDF)
+            </button>
+          </div>
+        </section>
+
+        <!-- STEP 3 -->
+        <section class="card step-disabled" id="step3-card">
+          <div class="step-header">
+            <div class="step-title">
+              <span class="step-chip">3</span>
+              Validator, signature & PDF
+              <span class="step-badge">Final step</span>
+            </div>
+            <div class="step-help">
+              Name & signature appear in the PDF.
+            </div>
+          </div>
+
+          <div class="field-row">
+            <label for="validator">Validator name *</label>
+            <input id="validator" placeholder="e.g. Max Mustermann" />
+          </div>
+
+          <div class="sig-container">
+            <div class="sig-label">Signature</div>
+            <canvas id="signature-pad"></canvas>
+
+            <div class="sig-actions">
+              <button id="clear-signature-btn" class="btn-outline">Clear</button>
+              <span>Sign, then tap “Generate PDF”.</span>
+            </div>
+          </div>
+
+          <div class="right">
+            <button id="generate-pdf-btn" class="btn-primary">
+              Generate & Preview PDF
+            </button>
+          </div>
+        </section>
+
+        <!-- HISTORY -->
+        <section class="card" id="history-card">
+          <div class="history-title">History (local)</div>
+          <div id="history-list"></div>
+        </section>
+
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- PDF MODAL -->
+<div id="pdf-modal-backdrop" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>🦉 Preview inspection report</h2>
+      <div id="modal-validator-label"></div>
+      <button id="close-modal-btn" class="close-x">&times;</button>
+    </div>
+    <div class="modal-body">
+      <iframe id="pdf-preview-frame"></iframe>
+    </div>
+    <div class="modal-footer">
+      <span id="modal-validator-footer"></span>
+      <div>
+        <button id="cancel-download-btn" class="btn-outline">Cancel</button>
+        <button id="approve-download-btn" class="btn-primary">Approve & Download</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CAMERA -->
+<div id="camera-modal">
+  <div class="camera-inner">
+    <button id="camera-close">✕ Close</button>
+    <video id="camera--view" autoplay playsinline></video>
+    <button id="camera--trigger">Take picture</button>
+    <canvas id="camera--sensor" style="display:none;"></canvas>
+    <img id="camera--output" style="display:none;">
+  </div>
+</div>
+
+</body>
+</html>
