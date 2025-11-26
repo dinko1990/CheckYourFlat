@@ -1,6 +1,6 @@
 (function () {
 
-  const APP_VERSION = "1.2.86";    // change per release
+  const APP_VERSION = "1.2.98";    // change per release
 
   
   const { jsPDF } = window.jspdf;
@@ -371,6 +371,7 @@ function addFieldRow(field) {
 
   tr.appendChild(realityTd);
   comparisonBody.appendChild(tr);
+  makeRowDraggable(tr);  
 }
 
 function addCustomTextRow() {
@@ -422,8 +423,58 @@ function addCustomTextRow() {
   tr.appendChild(realityTd);
 
   document.querySelector("#comparison-table tbody").appendChild(tr);
+    makeRowDraggable(tr); 
+
 }
 
+// --- Drag & drop rows in comparison table ---
+
+let dragSrcRow = null;
+
+function makeRowDraggable(tr) {
+  tr.draggable = true;
+  tr.classList.add("row-draggable");
+
+  tr.addEventListener("dragstart", function (e) {
+    dragSrcRow = tr;
+    tr.classList.add("dragging");
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", "");
+  });
+
+  tr.addEventListener("dragend", function () {
+    tr.classList.remove("dragging");
+    dragSrcRow = null;
+  });
+
+  tr.addEventListener("dragover", function (e) {
+    e.preventDefault();
+    if (!dragSrcRow || dragSrcRow === tr) return;
+
+    const tbody = tr.parentNode;
+    const rect = tr.getBoundingClientRect();
+    const offset = e.clientY - rect.top;
+    const half = rect.height / 2;
+
+    if (offset < half) {
+      tbody.insertBefore(dragSrcRow, tr);
+    } else {
+      if (tr.nextSibling) {
+        tbody.insertBefore(dragSrcRow, tr.nextSibling);
+      } else {
+        tbody.appendChild(dragSrcRow);
+      }
+    }
+  });
+
+  tr.addEventListener("drop", function (e) {
+    e.preventDefault();
+  });
+}
+
+function initRowDragging() {
+  comparisonBody.querySelectorAll("tr").forEach(makeRowDraggable);
+}
 
 
 
@@ -561,6 +612,7 @@ cameraTrigger.addEventListener("click", () => {
       img.style.display = "block";
     };
     reader.readAsDataURL(f);
+    
   });
 
   const cameraBtn = document.createElement("button");
@@ -611,6 +663,7 @@ cameraTrigger.addEventListener("click", () => {
   tr.appendChild(descTd);
   tr.appendChild(realityTd);
   comparisonBody.appendChild(tr);
+  makeRowDraggable(tr);  
 }
 
 
@@ -994,6 +1047,8 @@ cameraTrigger.addEventListener("click", () => {
     closeModal();
     renderHistory();
     renderVersionInfo();
+    initRowDragging();
+
   });
 
   /* ========= HISTORY ========= */
@@ -1056,5 +1111,5 @@ cameraTrigger.addEventListener("click", () => {
   }
 
   renderHistory();
-  renderVersionInfo();   // 👈 add this line
+  renderVersionInfo();   
 })();
