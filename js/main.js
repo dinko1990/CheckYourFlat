@@ -405,8 +405,11 @@ function addCustomTextRow() {
   const realityTd = document.createElement("td");
   realityTd.className = "editable";
   realityTd.dataset.label = "✅ Reality";
-  realityTd.colSpan = 2;  // 👈 KEY: take both Exposé + Reality columns
+  realityTd.colSpan = 2;    // 👈 spans Exposé + Reality columns
 
+  const realityInner = document.createElement("div");
+  realityInner.className = "editable-inner";
+  
   const editableDiv = document.createElement("div");
   editableDiv.className = "cell-editable";
   editableDiv.contentEditable = "true";
