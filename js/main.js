@@ -1114,12 +1114,3 @@ cameraTrigger.addEventListener("click", () => {
   renderVersionInfo();   
 })();
 
-  function clearHistory() {
-  if (confirm("Clear all history entries from this browser?")) {
-    localStorage.removeItem("cyf-history-v3"); // your existing history key
-    renderHistory(); // refresh UI
-  }
-}
-
-document.getElementById("clear-history-btn").addEventListener("click", clearHistory);
-
