@@ -321,7 +321,7 @@ body {
   background: #fbfaff;
 }
 .upload-area.dragover {
-  background: #f0ebff;
+  background: #fff;
 }
 .upload-icon {
   font-size: 32px;
@@ -378,7 +378,7 @@ tr.drag-over {
 
 /* The row currently being dragged */
 tr.dragging {
-  opacity: 0.6;
+  opacity: 0.8;
 }
 
 
