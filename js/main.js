@@ -1110,6 +1110,10 @@ cameraTrigger.addEventListener("click", () => {
     });
   }
 
+  renderHistory();
+  renderVersionInfo();   
+})();
+
   function clearHistory() {
   if (confirm("Clear all history entries from this browser?")) {
     localStorage.removeItem("cyf-history-v3"); // your existing history key
@@ -1119,7 +1123,3 @@ cameraTrigger.addEventListener("click", () => {
 
 document.getElementById("clear-history-btn").addEventListener("click", clearHistory);
 
-
-  renderHistory();
-  renderVersionInfo();   // 👈 add this line
-})();
