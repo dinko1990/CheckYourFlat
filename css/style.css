@@ -409,6 +409,17 @@ body {
   color: #d62839;
 }
 
+.label-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+
+.mandatory {
+  color: #e54b4b;
+  font-weight: bold;
+}
 
 /* Field label + delete button layout */
 .field-label-wrapper {
