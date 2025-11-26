@@ -416,30 +416,35 @@ function addCustomTextRow() {
   let cameraStream = null;
   let currentPhotoTargetImg = null;
 
-function openCamera(imgElement) {
-  navigator.mediaDevices.getUserMedia({
-    video: { facingMode: { exact: "environment" } }
-  })
-  .then(stream => {
-    cameraStream = stream;
-    cameraView.srcObject = stream;
-    document.getElementById("camera-modal").classList.add("active");
-  })
-  .catch(err => {
-    // fallback if device doesn't allow exact: "environment"
-    navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "environment" }
-    })
-    .then(stream => {
-      cameraStream = stream;
-      cameraView.srcObject = stream;
-      document.getElementById("camera-modal").classList.add("active");
-    })
-    .catch(err2 => {
-      alert("Unable to access the back camera on this device.");
+
+  
+  async function openCamera(targetImg) {
+  currentPhotoTargetImg = targetImg;         // 👈 this is the critical part
+  cameraModal.classList.add("active");
+
+  try {
+    // Try to force the back camera
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { exact: "environment" } },
+      audio: false
     });
-  });
+  } catch (err) {
+    // Fallback: best-effort "environment" if exact fails
+    try {
+      cameraStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+        audio: false
+      });
+    } catch (err2) {
+      alert("Camera not available / blocked.");
+      closeCamera();
+      return;
+    }
+  }
+
+  cameraView.srcObject = cameraStream;
 }
+
 
   function closeCamera() {
     cameraModal.classList.remove("active");
@@ -451,18 +456,23 @@ function openCamera(imgElement) {
   }
 
   cameraClose.addEventListener("click", closeCamera);
-  cameraTrigger.addEventListener("click", () => {
-    if (!cameraStream || !currentPhotoTargetImg) return;
-    const trackSettings = cameraStream.getVideoTracks()[0].getSettings();
-    cameraSensor.width = trackSettings.width || 640;
-    cameraSensor.height = trackSettings.height || 480;
-    const ctx = cameraSensor.getContext("2d");
-    ctx.drawImage(cameraView, 0, 0, cameraSensor.width, cameraSensor.height);
-    const dataURL = cameraSensor.toDataURL("image/jpeg");
-    currentPhotoTargetImg.src = dataURL;
-    currentPhotoTargetImg.style.display = "block";
-    closeCamera();
-  });
+cameraTrigger.addEventListener("click", () => {
+  if (!cameraStream || !currentPhotoTargetImg) return;
+
+  const trackSettings = cameraStream.getVideoTracks()[0].getSettings();
+  cameraSensor.width = trackSettings.width || 640;
+  cameraSensor.height = trackSettings.height || 480;
+
+  const ctx = cameraSensor.getContext("2d");
+  ctx.drawImage(cameraView, 0, 0, cameraSensor.width, cameraSensor.height);
+
+  const dataURL = cameraSensor.toDataURL("image/jpeg");
+  currentPhotoTargetImg.src = dataURL;
+  currentPhotoTargetImg.style.display = "block";
+
+  closeCamera();
+});
+
 
  function addPhotoRow() {
   const tr = document.createElement("tr");
