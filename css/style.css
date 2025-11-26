@@ -452,31 +452,6 @@ body {
 
 
 
-/* responsive labels for mobile */
-@media (max-width: 720px) {
-  #comparison-table thead {
-    display: none;
-  }
-  #comparison-table,
-  #comparison-table tbody,
-  #comparison-table td {
-    display: block;
-    width: 100%;
-  }
-
-  #comparison-table td {
-    border-bottom: 1px solid #f1eaff;
-  }
-  #comparison-table td::before {
-    content: attr(data-label);
-    display: block;
-    font-size: 11px;
-    font-weight: 600;
-    color: #7a719d;
-    margin-bottom: 2px;
-  }
-}
-
 /* cells */
 .expose-cell {
   background: #fbf9ff;
@@ -939,8 +914,6 @@ body {
   padding-right: 4px;
 }
 
-
-
 /* RESPONSIVE */
 
 /* ====== <= 960px ====== */
@@ -956,22 +929,21 @@ body {
   }
 }
 
-/* ====== <= 720px (MOBILE TABLE FIX) ====== */
+/* ====== <= 720px (MOBILE TABLE + LAYOUT) ====== */
 @media (max-width: 720px) {
 
-  /* Hide table header */
+  /* Comparison table → card layout */
   #comparison-table thead {
     display: none;
   }
 
-  /* Table and body become block containers */
   #comparison-table,
   #comparison-table tbody {
     display: block;
     width: 100%;
   }
 
-  /* Each table row becomes a card */
+  /* Each TR becomes a card */
   #comparison-table tr {
     display: block;
     width: 100%;
@@ -982,7 +954,7 @@ body {
     background: #fff;
   }
 
-  /* All cells become full-width stacked rows */
+  /* All TDs stacked full-width */
   #comparison-table td,
   #comparison-table td:first-child,
   #comparison-table td:nth-child(2),
@@ -994,7 +966,7 @@ body {
     box-sizing: border-box;
   }
 
-  /* Remove line under the last row */
+  /* Remove line under last row in card */
   #comparison-table td:last-child {
     border-bottom: none;
   }
@@ -1009,12 +981,12 @@ body {
     margin-bottom: 3px;
   }
 
-  /* No label for field-title cell */
+  /* No label before the field-title cell */
   #comparison-table td:first-child::before {
     content: none;
   }
 
-  /* Editable field gets full width */
+  /* Editable field full width */
   #comparison-table .cell-editable {
     display: block;
     width: 100%;
@@ -1023,6 +995,18 @@ body {
     border-radius: 10px;
     border: 1px dashed transparent;
     box-sizing: border-box;
+  }
+
+  /* (Optional) nicer actions layout on mobile */
+  .table-actions {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .table-actions .btn-chip {
+    width: 100%;
+    justify-content: center;
+    padding: 8px 14px;
+    font-size: 13px;
   }
 }
 
@@ -1035,3 +1019,4 @@ body {
     font-size: 12px;
   }
 }
+
