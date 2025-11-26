@@ -1,10 +1,7 @@
 (function () {
 
-  const APP_VERSION = "0.1.0";    // change per release
-  const APP_COMMIT = new Date().toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit"
-  });
+  const APP_VERSION = "1.1.80";    // change per release
+
   
   const { jsPDF } = window.jspdf;
 
