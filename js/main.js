@@ -1,6 +1,6 @@
 (function () {
 
-  const APP_VERSION = "1.2.98";    // change per release
+  const APP_VERSION = "1.3.01";    // change per release
 
   
   const { jsPDF } = window.jspdf;
@@ -1109,6 +1109,16 @@ cameraTrigger.addEventListener("click", () => {
       historyListEl.appendChild(div);
     });
   }
+
+  function clearHistory() {
+  if (confirm("Clear all history entries from this browser?")) {
+    localStorage.removeItem("cyf-history-v3"); // your existing history key
+    renderHistory(); // refresh UI
+  }
+}
+
+document.getElementById("clear-history-btn").addEventListener("click", clearHistory);
+
 
   renderHistory();
   renderVersionInfo();   // 👈 add this line
