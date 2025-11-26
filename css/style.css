@@ -378,7 +378,7 @@ tr.drag-over {
 
 /* The row currently being dragged */
 tr.dragging {
-  opacity: 0.8;
+  opacity: 0.4;
 }
 /* Placeholder gap where the row will land */
 tr.drag-placeholder td {
