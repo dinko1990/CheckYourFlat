@@ -866,23 +866,71 @@ body {
 }
 
 /* RESPONSIVE */
-@media (max-width: 960px) {
-  .sidebar {
+@media (max-width: 720px) {
+  /* hide header row */
+  #comparison-table thead {
     display: none;
   }
-  .main {
-    padding-top: 56px;
-  }
-  .mobile-left-menu {
-    display: block;
-  }
-}
 
-@media (max-width: 480px) {
-  .hero-title {
-    font-size: 26px;
+  /* keep table/tbody as block just for layout */
+  #comparison-table,
+  #comparison-table tbody {
+    display: block;
+    width: 100%;
   }
-  .hero-subtitle {
+
+  /* each TR becomes a card laid out as a grid:
+     row 1: field name (full width)
+     row 2: expose | reality (two columns) */
+  #comparison-table tr {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    grid-template-areas:
+      "label  label"
+      "expose reality";
+    gap: 6px 8px;
+    margin-bottom: 10px;
+    border-radius: 12px;
+    border: 1px solid #eee5ff;
+    padding: 8px;
+    background: #fff;
+  }
+
+  #comparison-table td {
+    border-bottom: none;
+    padding: 2px 0;
     font-size: 12px;
+    width: 100%; /* safe default */
+  }
+
+  /* field name cell on top */
+  #comparison-table td:first-child {
+    grid-area: label;
+    font-weight: 600;
+  }
+
+  /* expose + reality cells side by side */
+  #comparison-table td:nth-child(2) {
+    grid-area: expose;
+  }
+
+  #comparison-table td:nth-child(3) {
+    grid-area: reality;
+  }
+
+  /* inline labels using data-label, but only for 2nd & 3rd cells
+     (we don't need a label before the field name itself) */
+  #comparison-table td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 10px;
+    font-weight: 600;
+    color: #7a719d;
+    margin-bottom: 2px;
+  }
+
+  #comparison-table td:first-child::before {
+    content: none;
   }
 }
