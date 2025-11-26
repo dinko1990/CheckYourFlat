@@ -439,6 +439,38 @@ body {
   }
 }
 
+/* FORM FIELD ROWS */
+.field-row {
+  display: grid;
+  grid-template-columns: 1.1fr 2fr;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+.field-row label {
+  font-size: 11px;
+  color: #6c618b;
+}
+
+.field-row input {
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid #dcd3ff;
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.field-row input:focus {
+  border-color: #ff8fa3;
+  box-shadow: 0 0 0 2px rgba(255, 143, 163, 0.25);
+}
+
+
+
 /* cells */
 .expose-cell {
   background: #fbf9ff;
@@ -776,12 +808,15 @@ body {
 
 /* error highlighting */
 .field-error {
-  border-color: #f44336 !important;
-  box-shadow: 0 0 0 1px rgba(244, 67, 54, 0.3);
+  border-color: #d62839 !important;
+  box-shadow: 0 0 0 2px rgba(214, 40, 57, 0.23) !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
+
 .row-error {
   background: #fff5f5;
 }
+
 
 /* CAMERA MODAL */
 #camera-modal {
