@@ -416,17 +416,31 @@ function addCustomTextRow() {
   let cameraStream = null;
   let currentPhotoTargetImg = null;
 
-  async function openCamera(targetImg) {
-    currentPhotoTargetImg = targetImg;
-    cameraModal.classList.add("active");
-    try {
-      cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-      cameraView.srcObject = cameraStream;
-    } catch (err) {
-      alert("Camera not available / blocked.");
-      closeCamera();
-    }
-  }
+function openCamera(imgElement) {
+  navigator.mediaDevices.getUserMedia({
+    video: { facingMode: { exact: "environment" } }
+  })
+  .then(stream => {
+    cameraStream = stream;
+    cameraView.srcObject = stream;
+    document.getElementById("camera-modal").classList.add("active");
+  })
+  .catch(err => {
+    // fallback if device doesn't allow exact: "environment"
+    navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "environment" }
+    })
+    .then(stream => {
+      cameraStream = stream;
+      cameraView.srcObject = stream;
+      document.getElementById("camera-modal").classList.add("active");
+    })
+    .catch(err2 => {
+      alert("Unable to access the back camera on this device.");
+    });
+  });
+}
+
   function closeCamera() {
     cameraModal.classList.remove("active");
     if (cameraStream) {
