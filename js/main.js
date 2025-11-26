@@ -269,7 +269,7 @@ function addFieldRow(field) {
     const delBtn = document.createElement("button");
     delBtn.type = "button";
     delBtn.className = "trash-inline";
-    delBtn.innerHTML = "−"; // red minus in a circle via CSS
+    delBtn.innerHTML = "x"; // red minus in a circle via CSS
     delBtn.addEventListener("click", () => {
       if (confirm("Remove this field from the mask?")) {
         tr.remove();
