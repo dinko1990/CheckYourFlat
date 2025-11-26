@@ -1,6 +1,6 @@
 (function () {
 
-  const APP_VERSION = "1.1.82";    // change per release
+  const APP_VERSION = "1.2.82";    // change per release
 
   
   const { jsPDF } = window.jspdf;
@@ -377,7 +377,7 @@ function addCustomTextRow() {
   const tr = document.createElement("tr");
   tr.dataset.rowType = "custom-text";
 
-  /* ----- FIELD TITLE (editable + blue styling) ----- */
+  /* ----- FIELD TITLE (editable, blue) ----- */
   const descTd = document.createElement("td");
   descTd.dataset.label = "🧾 Field";
 
@@ -389,7 +389,6 @@ function addCustomTextRow() {
   fieldSpan.contentEditable = "true";
   fieldSpan.textContent = "Custom note";
 
-  // delete button
   const delBtn = document.createElement("button");
   delBtn.type = "button";
   delBtn.className = "trash-inline";
@@ -402,10 +401,17 @@ function addCustomTextRow() {
   labelWrapper.appendChild(delBtn);
   descTd.appendChild(labelWrapper);
 
-  /* ----- REALITY CELL (editable) ----- */
+  /* ----- FAKE EXPOSÉ CELL (to keep columns aligned) ----- */
+  const exposeTd = document.createElement("td");
+  exposeTd.className = "expose-cell custom-expose-empty";
+  exposeTd.dataset.label = "🏢 Exposé";
+  // You can change this text or leave it blank
+  exposeTd.innerHTML = "<span class='custom-expose-placeholder'>—</span>";
+
+  /* ----- REALITY CELL (editable, green) ----- */
   const realityTd = document.createElement("td");
   realityTd.className = "editable";
-  realityTd.dataset.label = "Reality";
+  realityTd.dataset.label = "✅ Reality";
 
   const editableDiv = document.createElement("div");
   editableDiv.className = "cell-editable";
@@ -414,8 +420,9 @@ function addCustomTextRow() {
 
   realityTd.appendChild(editableDiv);
 
-  /* ----- append only TWO cells ----- */
+  /* ----- append all three cells ----- */
   tr.appendChild(descTd);
+  tr.appendChild(exposeTd);
   tr.appendChild(realityTd);
 
   document.querySelector("#comparison-table tbody").appendChild(tr);
