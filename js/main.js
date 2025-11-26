@@ -1,6 +1,6 @@
 (function () {
 
-  const APP_VERSION = "1.1.81";    // change per release
+  const APP_VERSION = "1.1.82";    // change per release
 
   
   const { jsPDF } = window.jspdf;
@@ -377,52 +377,50 @@ function addCustomTextRow() {
   const tr = document.createElement("tr");
   tr.dataset.rowType = "custom-text";
 
+  /* ----- FIELD TITLE (editable + blue styling) ----- */
   const descTd = document.createElement("td");
   descTd.dataset.label = "🧾 Field";
 
   const labelWrapper = document.createElement("div");
-  labelWrapper.className = "field-label-wrapper";
+  labelWrapper.className = "field-label-wrapper custom-row-title";
 
   const fieldSpan = document.createElement("span");
-  fieldSpan.className = "cell-editable field-label-text";
+  fieldSpan.className = "cell-editable custom-title";
   fieldSpan.contentEditable = "true";
   fieldSpan.textContent = "Custom note";
 
-  const trash = document.createElement("button");
-  trash.type = "button";
-  trash.className = "trash-inline";
-  trash.innerHTML = "x";
-  trash.addEventListener("click", () => {
-    if (confirm("Remove this row?")) tr.remove();
+  // delete button
+  const delBtn = document.createElement("button");
+  delBtn.type = "button";
+  delBtn.className = "trash-inline";
+  delBtn.innerHTML = "×";
+  delBtn.addEventListener("click", () => {
+    if (confirm("Remove this custom row?")) tr.remove();
   });
 
   labelWrapper.appendChild(fieldSpan);
-  labelWrapper.appendChild(trash);
+  labelWrapper.appendChild(delBtn);
   descTd.appendChild(labelWrapper);
 
-  const exposeTd = document.createElement("td");
-  exposeTd.dataset.label = "🏢 Exposé";
-  exposeTd.className = "expose-cell";
-  exposeTd.textContent = "";
-
+  /* ----- REALITY CELL (editable) ----- */
   const realityTd = document.createElement("td");
-  realityTd.dataset.label = "✅ Reality";
   realityTd.className = "editable";
+  realityTd.dataset.label = "Reality";
 
-  const span = document.createElement("span");
-  span.className = "cell-editable";
-  span.contentEditable = "true";
-  span.innerHTML = '<span style="opacity:0.35;">Write your inspection result…</span>';
-  span.addEventListener("focus", () => {
-    if (span.querySelector("span")) span.textContent = "";
-  });
-  realityTd.appendChild(span);
+  const editableDiv = document.createElement("div");
+  editableDiv.className = "cell-editable";
+  editableDiv.contentEditable = "true";
+  editableDiv.textContent = "";
 
+  realityTd.appendChild(editableDiv);
+
+  /* ----- append only TWO cells ----- */
   tr.appendChild(descTd);
-  tr.appendChild(exposeTd);
   tr.appendChild(realityTd);
-  comparisonBody.appendChild(tr);
+
+  document.querySelector("#comparison-table tbody").appendChild(tr);
 }
+
 
 
   /* ===== CAMERA / PHOTO ROW ===== */
