@@ -1,6 +1,6 @@
 (function () {
 
-  const APP_VERSION = "1.3.20";    // change per release
+  const APP_VERSION = "1.3.35";    // change per release
 
   
   const { jsPDF } = window.jspdf;
@@ -430,38 +430,44 @@ function addCustomTextRow() {
 // --- Drag & drop rows in comparison table ---
 
 let dragSrcRow = null;
+let dragPlaceholder = null;
 
 function makeRowDraggable(tr) {
   tr.draggable = true;
   tr.classList.add("row-draggable");
 
-  /* When dragging starts */
+  // When dragging starts
   tr.addEventListener("dragstart", function (e) {
     dragSrcRow = tr;
     tr.classList.add("dragging");
+
+    // Create placeholder row if needed
+    if (!dragPlaceholder) {
+      dragPlaceholder = document.createElement("tr");
+      dragPlaceholder.className = "drag-placeholder";
+      const td = document.createElement("td");
+      td.colSpan = tr.children.length || 2;
+      dragPlaceholder.appendChild(td);
+    } else {
+      const td = dragPlaceholder.firstElementChild;
+      td.colSpan = tr.children.length || td.colSpan || 2;
+    }
+
+    // Insert placeholder after the dragged row initially
+    if (tr.nextSibling) {
+      comparisonBody.insertBefore(dragPlaceholder, tr.nextSibling);
+    } else {
+      comparisonBody.appendChild(dragPlaceholder);
+    }
 
     e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.setData("text/plain", ""); // required for Firefox
   });
 
-  /* When dragging ends */
-  tr.addEventListener("dragend", function () {
-    tr.classList.remove("dragging");
-    dragSrcRow = null;
-
-    // Remove ALL previews
-    comparisonBody.querySelectorAll("tr").forEach(r =>
-      r.classList.remove("drag-over")
-    );
-  });
-
-  /* While dragging over another row */
+  // While dragging over another row
   tr.addEventListener("dragover", function (e) {
     e.preventDefault();
-    if (!dragSrcRow || dragSrcRow === tr) return;
-
-    // highlight preview
-    tr.classList.add("drag-over");
+    if (!dragSrcRow || tr === dragSrcRow || tr === dragPlaceholder) return;
 
     const tbody = tr.parentNode;
     const rect = tr.getBoundingClientRect();
@@ -469,29 +475,37 @@ function makeRowDraggable(tr) {
     const half = rect.height / 2;
 
     if (offset < half) {
-      // insert before
-      tbody.insertBefore(dragSrcRow, tr);
+      // Move placeholder above this row
+      tbody.insertBefore(dragPlaceholder, tr);
     } else {
-      // insert after
+      // Move placeholder below this row
       if (tr.nextSibling) {
-        tbody.insertBefore(dragSrcRow, tr.nextSibling);
+        tbody.insertBefore(dragPlaceholder, tr.nextSibling);
       } else {
-        tbody.appendChild(dragSrcRow);
+        tbody.appendChild(dragPlaceholder);
       }
     }
   });
 
-  /* When leaving a row without dropping */
-  tr.addEventListener("dragleave", function () {
-    tr.classList.remove("drag-over");
-  });
-
-  /* When dropping ON a row (for safety cleanup) */
+  // Prevent default drop behavior
   tr.addEventListener("drop", function (e) {
     e.preventDefault();
-    tr.classList.remove("drag-over");
+  });
+
+  // When dragging ends (drop or cancel)
+  tr.addEventListener("dragend", function () {
+    tr.classList.remove("dragging");
+
+    if (dragPlaceholder && dragPlaceholder.parentNode === comparisonBody && dragSrcRow) {
+      // Move the dragged row into the placeholder position
+      comparisonBody.insertBefore(dragSrcRow, dragPlaceholder);
+      comparisonBody.removeChild(dragPlaceholder);
+    }
+
+    dragSrcRow = null;
   });
 }
+
 
 function initRowDragging() {
   comparisonBody.querySelectorAll("tr").forEach(makeRowDraggable);
