@@ -439,38 +439,6 @@ body {
   }
 }
 
-/* FORM FIELD ROWS */
-.field-row {
-  display: grid;
-  grid-template-columns: 1.1fr 2fr;
-  gap: 8px;
-  align-items: center;
-  margin-bottom: 8px;
-  font-size: 12px;
-}
-
-.field-row label {
-  font-size: 11px;
-  color: #6c618b;
-}
-
-.field-row input {
-  width: 100%;
-  padding: 6px 10px;
-  border-radius: 999px;
-  border: 1px solid #dcd3ff;
-  font-size: 12px;
-  outline: none;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.field-row input:focus {
-  border-color: #ff8fa3;
-  box-shadow: 0 0 0 2px rgba(255, 143, 163, 0.25);
-}
-
-
-
 /* cells */
 .expose-cell {
   background: #fbf9ff;
@@ -808,15 +776,12 @@ body {
 
 /* error highlighting */
 .field-error {
-  border-color: #d62839 !important;
-  box-shadow: 0 0 0 2px rgba(214, 40, 57, 0.23) !important;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  border-color: #f44336 !important;
+  box-shadow: 0 0 0 1px rgba(244, 67, 54, 0.3);
 }
-
 .row-error {
   background: #fff5f5;
 }
-
 
 /* CAMERA MODAL */
 #camera-modal {
@@ -866,33 +831,23 @@ body {
 }
 
 /* RESPONSIVE */
-@media (max-width: 720px) {
-  #comparison-table thead {
+@media (max-width: 960px) {
+  .sidebar {
     display: none;
   }
-  #comparison-table,
-  #comparison-table tbody,
-  #comparison-table tr,
-  #comparison-table td {
+  .main {
+    padding-top: 56px;
+  }
+  .mobile-left-menu {
     display: block;
-    width: 100%;
-  }
-  #comparison-table tr {
-    margin-bottom: 10px;
-    border-radius: 12px;
-    border: 1px solid #eee5ff;
-    overflow: hidden;
-  }
-  #comparison-table td {
-    border-bottom: 1px solid #f1eaff;
-  }
-  #comparison-table td::before {
-    content: attr(data-label);
-    display: block;
-    font-size: 11px;
-    font-weight: 600;
-    color: #7a719d;
-    margin-bottom: 2px;
   }
 }
 
+@media (max-width: 480px) {
+  .hero-title {
+    font-size: 26px;
+  }
+  .hero-subtitle {
+    font-size: 12px;
+  }
+}
