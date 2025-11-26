@@ -908,6 +908,17 @@ body {
   color: #fff;
 }
 
+/* Version footer */
+.version-info {
+  margin-top: 12px;
+  font-size: 10px;
+  color: #9a92c0;
+  opacity: 0.75;
+  text-align: right;
+  padding-right: 4px;
+}
+
+
 
 /* RESPONSIVE */
 
