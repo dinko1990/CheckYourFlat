@@ -493,18 +493,30 @@ body {
 }
 
 
-
-/* Reality column (all editable cells) */
-#comparison-table td.editable {
-  background: #e9fff4;                 /* soft green */
-  border-left: 2px solid #4ecb9f;
+/* Layout inside the Reality cell */
+#comparison-table td.editable .editable-inner {
   display: flex;
   flex-direction: column;
   gap: 4px;
   padding: 8px 10px;
   box-sizing: border-box;
-  transition: background 0.2s ease, border-left-color 0.2s ease;
 }
+
+
+/* Inputs inside Reality stay as you had */
+#comparison-table td.editable .cell-editable {
+  display: block;
+  width: 100%;
+  min-height: 24px;
+  outline: none;
+  padding: 6px 8px;
+  border-radius: 10px;
+  border: 1px solid #c9efd9;
+  background: #ffffff;
+  box-sizing: border-box;
+}
+
+
 
 /* Inner editable text / inputs */
 #comparison-table td.editable .cell-editable {
