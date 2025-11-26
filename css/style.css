@@ -911,6 +911,42 @@ body {
   color: #fff;
 }
 
+/* Validator / form row */
+.field-row {
+  display: grid;
+  grid-template-columns: 1.1fr 2fr;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+.field-row label {
+  font-size: 11px;
+  color: #6c618b;
+}
+
+/* Pill-style input */
+.field-row input {
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid #dcd3ff;
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  background: #ffffff;
+}
+
+/* Focus glow */
+.field-row input:focus {
+  border-color: #ff8fa3;
+  box-shadow: 0 0 0 2px rgba(255, 143, 163, 0.25);
+}
+
+
+
+
 /* Version footer */
 .version-info {
   margin-top: 12px;
