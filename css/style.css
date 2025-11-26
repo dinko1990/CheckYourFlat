@@ -415,17 +415,11 @@ body {
   }
   #comparison-table,
   #comparison-table tbody,
-  #comparison-table tr,
   #comparison-table td {
     display: block;
     width: 100%;
   }
-  #comparison-table tr {
-    margin-bottom: 10px;
-    border-radius: 12px;
-    border: 1px solid #eee5ff;
-    overflow: hidden;
-  }
+
   #comparison-table td {
     border-bottom: 1px solid #f1eaff;
   }
@@ -830,7 +824,10 @@ body {
   color: #fff;
 }
 
+
 /* RESPONSIVE */
+
+/* ====== <= 960px ====== */
 @media (max-width: 960px) {
   .sidebar {
     display: none;
@@ -843,6 +840,77 @@ body {
   }
 }
 
+/* ====== <= 720px (MOBILE TABLE FIX) ====== */
+@media (max-width: 720px) {
+
+  /* Hide table header */
+  #comparison-table thead {
+    display: none;
+  }
+
+  /* Table and body become block containers */
+  #comparison-table,
+  #comparison-table tbody {
+    display: block;
+    width: 100%;
+  }
+
+  /* Each table row becomes a card */
+  #comparison-table tr {
+    display: block;
+    width: 100%;
+    margin-bottom: 12px;
+    border-radius: 14px;
+    border: 1px solid #eee5ff;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  /* All cells become full-width stacked rows */
+  #comparison-table td,
+  #comparison-table td:first-child,
+  #comparison-table td:nth-child(2),
+  #comparison-table td:nth-child(3) {
+    display: block;
+    width: 100% !important;
+    padding: 8px 12px;
+    border-bottom: 1px solid #f1eaff;
+    box-sizing: border-box;
+  }
+
+  /* Remove line under the last row */
+  #comparison-table td:last-child {
+    border-bottom: none;
+  }
+
+  /* Data labels */
+  #comparison-table td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: #7a719d;
+    margin-bottom: 3px;
+  }
+
+  /* No label for field-title cell */
+  #comparison-table td:first-child::before {
+    content: none;
+  }
+
+  /* Editable field gets full width */
+  #comparison-table .cell-editable {
+    display: block;
+    width: 100%;
+    min-height: 24px;
+    padding: 6px 8px;
+    border-radius: 10px;
+    border: 1px dashed transparent;
+    box-sizing: border-box;
+  }
+}
+
+/* ====== <= 480px ====== */
 @media (max-width: 480px) {
   .hero-title {
     font-size: 26px;
