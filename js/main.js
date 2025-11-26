@@ -271,17 +271,39 @@ function addFieldRow(field) {
   if (isMandatory) tr.classList.add("mandatory-row");
 
   // Column 1: field label + optional delete button
-  const descTd = document.createElement("td");
-  descTd.dataset.label = "🧾 Field";
+const descTd = document.createElement("td");
+descTd.dataset.label = "🧾 Field";
 
-  const labelWrapper = document.createElement("div");
-  labelWrapper.className = "field-label-wrapper";
+const labelWrapper = document.createElement("div");
+labelWrapper.className = "field-label-wrapper";
 
-  const labelSpan = document.createElement("span");
-  labelSpan.className = "field-label-text";
-  labelSpan.textContent = field.label;
+/* left side: label + mandatory star */
+const labelLeft = document.createElement("div");
+labelLeft.className = "label-left";
 
-  labelWrapper.appendChild(labelSpan);
+const labelSpan = document.createElement("span");
+labelSpan.textContent = field.label;
+labelLeft.appendChild(labelSpan);
+
+if (field.mandatory) {
+  const star = document.createElement("span");
+  star.className = "mandatory";
+  star.textContent = "*";
+  labelLeft.appendChild(star);
+}
+
+labelWrapper.appendChild(labelLeft);
+
+if (field.deletable) {
+  const delBtn = document.createElement("button");
+  delBtn.type = "button";
+  delBtn.className = "trash-inline";
+  delBtn.innerHTML = "×";
+  delBtn.addEventListener("click", () => tr.remove());
+  labelWrapper.appendChild(delBtn);
+}
+
+descTd.appendChild(labelWrapper);
 
   // Add red minus circle for NON-mandatory fields
   if (!isMandatory) {
