@@ -408,6 +408,46 @@ body {
   color: #d62839;
 }
 
+
+/* Field label + delete button layout */
+.field-label-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+
+.field-label-text {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1b1330;
+}
+
+/* Elegant red minus pill */
+.trash-inline {
+  margin-left: 8px;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  border: 1px solid #f4b0b7;
+  background: #fff5f6;
+  color: #d62839;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+.trash-inline:hover {
+  background: #ffe3e7;
+}
+
+
+
 /* responsive labels for mobile */
 @media (max-width: 720px) {
   #comparison-table thead {
