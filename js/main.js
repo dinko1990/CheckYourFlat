@@ -1,6 +1,6 @@
 (function () {
 
-  const APP_VERSION = "1.2.85";    // change per release
+  const APP_VERSION = "1.2.86";    // change per release
 
   
   const { jsPDF } = window.jspdf;
@@ -495,7 +495,126 @@ cameraTrigger.addEventListener("click", () => {
 });
 
 
- addPhotoRow()
+ function addPhotoRow() {
+  const tr = document.createElement("tr");
+  tr.dataset.rowType = "photo";
+
+  /* ----- FIELD TITLE (editable, blue – like custom row) ----- */
+  const descTd = document.createElement("td");
+  descTd.dataset.label = "🧾 Field";
+
+  const labelWrapper = document.createElement("div");
+  // use same style as custom text row
+  labelWrapper.className = "field-label-wrapper custom-row-title";
+
+  const titleSpan = document.createElement("span");
+  // editable, same classes as custom text row
+  titleSpan.className = "cell-editable custom-title";
+  titleSpan.contentEditable = "true";
+  titleSpan.textContent = "Photo / comment";
+
+  const trash = document.createElement("button");
+  trash.type = "button";
+  trash.className = "trash-inline";
+  trash.innerHTML = "×";
+  trash.addEventListener("click", () => {
+    if (confirm("Remove this photo row?")) tr.remove();
+  });
+
+  labelWrapper.appendChild(titleSpan);
+  labelWrapper.appendChild(trash);
+  descTd.appendChild(labelWrapper);
+
+  /* ----- REALITY CELL (NO exposé, spans 2 cols like custom row) ----- */
+  const realityTd = document.createElement("td");
+  realityTd.dataset.label = "✅ Reality";
+  realityTd.className = "editable";
+  realityTd.colSpan = 2; // 👈 hide Exposé column for this row
+
+  const wrapper = document.createElement("div");
+  wrapper.className = "photo-wrapper";
+
+  const img = document.createElement("img");
+  img.className = "photo-preview";
+  img.style.display = "none";
+
+  const actions = document.createElement("div");
+  actions.className = "photo-actions";
+
+  const uploadBtn = document.createElement("button");
+  uploadBtn.type = "button";
+  uploadBtn.textContent = "Upload photo";
+
+  const fileInput = document.createElement("input");
+  fileInput.type = "file";
+  fileInput.accept = "image/*";
+  fileInput.style.display = "none";
+
+  uploadBtn.addEventListener("click", () => fileInput.click());
+
+  fileInput.addEventListener("change", e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      img.src = ev.target.result;
+      img.style.display = "block";
+    };
+    reader.readAsDataURL(f);
+  });
+
+  const cameraBtn = document.createElement("button");
+  cameraBtn.type = "button";
+  cameraBtn.textContent = "Use camera";
+  cameraBtn.addEventListener("click", () => openCamera(img));
+
+  /* ----- ROTATE BUTTON (rotates underlying image data) ----- */
+  const rotateBtn = document.createElement("button");
+  rotateBtn.type = "button";
+  rotateBtn.textContent = "Rotate 90°";
+
+  rotateBtn.addEventListener("click", () => {
+    if (!img.src || img.style.display === "none") return;
+
+    const image = new Image();
+    image.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = image.height;
+      canvas.height = image.width;
+      const ctx = canvas.getContext("2d");
+
+      // rotate 90 degrees clockwise
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate(90 * Math.PI / 180);
+      ctx.drawImage(image, -image.width / 2, -image.height / 2);
+
+      // overwrite the image data so PDF gets rotated version too
+      img.src = canvas.toDataURL("image/jpeg");
+    };
+    image.src = img.src;
+  });
+
+  actions.appendChild(uploadBtn);
+  actions.appendChild(cameraBtn);
+  actions.appendChild(rotateBtn);
+  actions.appendChild(fileInput);
+
+  const textarea = document.createElement("textarea");
+  textarea.className = "photo-comment";
+  textarea.placeholder = "Comment (optional)…";
+
+  wrapper.appendChild(img);
+  wrapper.appendChild(actions);
+  wrapper.appendChild(textarea);
+  realityTd.appendChild(wrapper);
+
+  tr.appendChild(descTd);
+  tr.appendChild(realityTd);
+  comparisonBody.appendChild(tr);
+}
+
+
+  
   function buildTable() {
     comparisonBody.innerHTML = "";
     inspectionFields.forEach(addFieldRow);
