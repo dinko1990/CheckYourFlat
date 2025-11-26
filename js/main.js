@@ -1,4 +1,9 @@
 (function () {
+
+  const APP_VERSION = "0.1.0";    // change per release
+  const APP_COMMIT  = "abc1234";  // short git hash or tag
+
+  
   const { jsPDF } = window.jspdf;
 
   /* ========= SIDEBAR NAV ========= */
@@ -8,6 +13,8 @@
   const step1Card = document.getElementById("step1-card");
   const historyCard = document.getElementById("history-card");
 
+
+  
   navItems.forEach(btn => {
     btn.addEventListener("click", () => {
       navItems.forEach(b => b.classList.remove("active"));
@@ -64,6 +71,17 @@
     3: document.getElementById("step3-card")
   };
 
+function renderVersionInfo() {
+  const el = document.getElementById("version-info");
+  if (!el) return;
+
+  let text = `Version ${APP_VERSION}`;
+  if (APP_COMMIT) text += ` · ${APP_COMMIT}`;
+
+  el.textContent = text;
+}
+
+  
   function updateStepAccess() {
     stepButtons.forEach(btn => {
       const s = parseInt(btn.dataset.step, 10);
@@ -940,6 +958,7 @@ cameraTrigger.addEventListener("click", () => {
 
     closeModal();
     renderHistory();
+    renderVersionInfo();
   });
 
   /* ========= HISTORY ========= */
