@@ -459,6 +459,38 @@ body {
   font-size: 11px;
 }
 
+/* Blue header for custom rows (Field column) */
+.custom-row-title {
+  background: #e9f1ff;
+  border-radius: 10px;
+  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.custom-row-title .custom-title {
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: text;
+}
+
+/* Fake exposé cell for custom rows */
+.custom-expose-empty {
+  text-align: left;
+  color: #b3aacd;
+  font-style: italic;
+  font-size: 11px;
+}
+
+.custom-expose-empty .custom-expose-placeholder {
+  opacity: 0.7;
+}
+
 
 
 /* Reality column (all editable cells) */
