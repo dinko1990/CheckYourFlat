@@ -479,6 +479,7 @@ body {
   cursor: text;
 }
 
+
 /* Fake exposé cell for custom rows */
 .custom-expose-empty {
   text-align: left;
