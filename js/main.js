@@ -1,6 +1,6 @@
 (function () {
 
-  const APP_VERSION = "1.2.83";    // change per release
+  const APP_VERSION = "1.2.85";    // change per release
 
   
   const { jsPDF } = window.jspdf;
@@ -495,94 +495,7 @@ cameraTrigger.addEventListener("click", () => {
 });
 
 
- function addPhotoRow() {
-  const tr = document.createElement("tr");
-  tr.dataset.rowType = "photo";
-
-  const descTd = document.createElement("td");
-  descTd.dataset.label = "🧾 Field";
-
-  const labelWrapper = document.createElement("div");
-  labelWrapper.className = "field-label-wrapper";
-
-  const titleSpan = document.createElement("span");
-  titleSpan.className = "field-label-text";
-  titleSpan.textContent = "Photo / comment";
-
-  const trash = document.createElement("button");
-  trash.type = "button";
-  trash.className = "trash-inline";
-  trash.innerHTML = "x";
-  trash.addEventListener("click", () => {
-    if (confirm("Remove this photo row?")) tr.remove();
-  });
-
-  labelWrapper.appendChild(titleSpan);
-  labelWrapper.appendChild(trash);
-  descTd.appendChild(labelWrapper);
-
-  const exposeTd = document.createElement("td");
-  exposeTd.dataset.label = "🏢 Exposé";
-  exposeTd.className = "expose-cell";
-  exposeTd.textContent = "";
-
-  const realityTd = document.createElement("td");
-  realityTd.dataset.label = "✅ Reality";
-  realityTd.className = "editable";
-
-  const wrapper = document.createElement("div");
-  wrapper.className = "photo-wrapper";
-
-  const img = document.createElement("img");
-  img.className = "photo-preview";
-  img.style.display = "none";
-
-  const actions = document.createElement("div");
-  actions.className = "photo-actions";
-
-  const uploadBtn = document.createElement("button");
-  uploadBtn.type = "button";
-  uploadBtn.textContent = "Upload photo";
-  const fileInput = document.createElement("input");
-  fileInput.type = "file";
-  fileInput.accept = "image/*";
-  fileInput.style.display = "none";
-  uploadBtn.addEventListener("click", () => fileInput.click());
-  fileInput.addEventListener("change", e => {
-    const f = e.target.files[0];
-    if (!f) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      img.src = ev.target.result;
-      img.style.display = "block";
-    };
-    reader.readAsDataURL(f);
-  });
-
-  const cameraBtn = document.createElement("button");
-  cameraBtn.type = "button";
-  cameraBtn.textContent = "Use camera";
-  cameraBtn.addEventListener("click", () => openCamera(img));
-
-  actions.appendChild(uploadBtn);
-  actions.appendChild(cameraBtn);
-  actions.appendChild(fileInput);
-
-  const textarea = document.createElement("textarea");
-  textarea.className = "photo-comment";
-  textarea.placeholder = "Comment (optional)…";
-
-  wrapper.appendChild(img);
-  wrapper.appendChild(actions);
-  wrapper.appendChild(textarea);
-  realityTd.appendChild(wrapper);
-
-  tr.appendChild(descTd);
-  tr.appendChild(exposeTd);
-  tr.appendChild(realityTd);
-  comparisonBody.appendChild(tr);
-}
-
+ addPhotoRow()
   function buildTable() {
     comparisonBody.innerHTML = "";
     inspectionFields.forEach(addFieldRow);
