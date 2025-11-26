@@ -1,8 +1,10 @@
 (function () {
 
   const APP_VERSION = "0.1.0";    // change per release
-  const APP_COMMIT  = "abc1234";  // short git hash or tag
-
+  const APP_COMMIT = new Date().toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit"
+  });
   
   const { jsPDF } = window.jspdf;
 
@@ -71,6 +73,8 @@
     3: document.getElementById("step3-card")
   };
 
+
+  
 function renderVersionInfo() {
   const el = document.getElementById("version-info");
   if (!el) return;
