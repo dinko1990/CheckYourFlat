@@ -459,6 +459,8 @@ body {
   font-size: 11px;
 }
 
+
+
 /* Reality column (all editable cells) */
 #comparison-table td.editable {
   background: #e9fff4;                 /* soft green */
@@ -483,6 +485,30 @@ body {
   background: #ffffff;
   box-sizing: border-box;
 }
+.custom-row-title {
+  background: #e9f1ff;
+  border-left: 2px solid #6b8cff;
+  padding: 6px 8px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.custom-row-title .custom-title {
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: text;
+}
+
+.custom-row-title .custom-title:focus {
+  border-bottom: 1px dashed #6b8cff;
+}
+
+
 
 /* Focus state in Reality */
 #comparison-table td.editable .cell-editable:focus {
