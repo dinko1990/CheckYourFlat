@@ -288,7 +288,7 @@ function addFieldRow(field) {
     const delBtn = document.createElement("button");
     delBtn.type = "button";
     delBtn.className = "trash-inline";
-    delBtn.innerHTML = "x"; // red minus in a circle via CSS
+    delBtn.innerHTML = "x"; // red x in a circle via CSS
     delBtn.addEventListener("click", () => {
       if (confirm("Remove this field from the mask?")) {
         tr.remove();
@@ -391,7 +391,7 @@ function addCustomTextRow() {
   const trash = document.createElement("button");
   trash.type = "button";
   trash.className = "trash-inline";
-  trash.innerHTML = "−";
+  trash.innerHTML = "x";
   trash.addEventListener("click", () => {
     if (confirm("Remove this row?")) tr.remove();
   });
@@ -510,7 +510,7 @@ cameraTrigger.addEventListener("click", () => {
   const trash = document.createElement("button");
   trash.type = "button";
   trash.className = "trash-inline";
-  trash.innerHTML = "−";
+  trash.innerHTML = "x";
   trash.addEventListener("click", () => {
     if (confirm("Remove this photo row?")) tr.remove();
   });
