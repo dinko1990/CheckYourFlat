@@ -370,6 +370,19 @@ body {
 }
 
 /* TABLE */
+
+/* While dragging over a potential drop target */
+tr.drag-over {
+  background: #e9e6f3 !important;   /* soft gray/purple highlight */
+}
+
+/* The row currently being dragged */
+tr.dragging {
+  opacity: 0.6;
+}
+
+
+
 .table-wrapper {
   width: 100%;
   overflow-x: auto;
