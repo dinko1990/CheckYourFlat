@@ -321,7 +321,7 @@ body {
   background: #fbfaff;
 }
 .upload-area.dragover {
-  background: #fff;
+  background: #000000;
 }
 .upload-icon {
   font-size: 32px;
