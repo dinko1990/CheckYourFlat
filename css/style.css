@@ -775,28 +775,6 @@ body {
   color: #1976d2;
 }
 
-.history-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.clear-history-btn {
-  background: #ff6666;
-  border: none;
-  color: white;
-  padding: 4px 10px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 13px;
-  transition: background 0.2s ease;
-}
-
-.clear-history-btn:hover {
-  background: #e45858;
-}
-
-
 /* modal */
 .modal-backdrop {
   position: fixed;
@@ -1112,4 +1090,3 @@ body {
     font-size: 12px;
   }
 }
-
