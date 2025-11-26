@@ -243,138 +243,168 @@
   const mockAutofillBtn = document.getElementById("mock-autofill-btn");
   const goStep3Btn = document.getElementById("go-step3-btn");
 
-  function addFieldRow(field) {
-    const tr = document.createElement("tr");
-    tr.dataset.rowType = "field";
-    tr.dataset.fieldId = field.id;
+function addFieldRow(field) {
+  const tr = document.createElement("tr");
+  tr.dataset.rowType = "field";
+  tr.dataset.fieldId = field.id;
 
-    const isMandatory = MANDATORY_FIELDS.includes(field.id);
-    if (isMandatory) tr.classList.add("mandatory-row");
+  const isMandatory = MANDATORY_FIELDS.includes(field.id);
+  if (isMandatory) tr.classList.add("mandatory-row");
 
-    // Column 1: field label (+ delete for custom, but not for template mandatory rows)
-    const descTd = document.createElement("td");
-    descTd.dataset.label = "🧾 Field";
-    descTd.textContent = field.label;
-    tr.appendChild(descTd);
+  // Column 1: field label + optional delete button
+  const descTd = document.createElement("td");
+  descTd.dataset.label = "🧾 Field";
 
-    // Column 2: exposé (read-only)
-    const exposeTd = document.createElement("td");
-    exposeTd.className = "expose-cell";
-    exposeTd.dataset.label = "🏢 Exposé";
-    const exposeValue = EXPOSE_DATA[field.id] || "";
-    exposeTd.textContent = exposeValue;
-    tr.appendChild(exposeTd);
+  const labelWrapper = document.createElement("div");
+  labelWrapper.className = "field-label-wrapper";
 
-    // Column 3: reality (editable)
-    const realityTd = document.createElement("td");
-    realityTd.className = "editable";
-    realityTd.dataset.label = "✅ Reality";
+  const labelSpan = document.createElement("span");
+  labelSpan.className = "field-label-text";
+  labelSpan.textContent = field.label;
 
-    const copyBtn = document.createElement("button");
-    copyBtn.type = "button";
-    copyBtn.className = "copy-btn";
-    copyBtn.textContent = "Copy from exposé";
+  labelWrapper.appendChild(labelSpan);
 
-    if (field.type === "text") {
-      const span = document.createElement("span");
-      span.className = "cell-editable";
-      span.contentEditable = "true";
-      span.dataset.placeholder = "Write your inspection result…";
-      span.innerHTML = '<span style="opacity:0.35;">Write your inspection result…</span>';
-
-      span.addEventListener("focus", () => {
-        if (span.querySelector("span")) span.textContent = "";
-      });
-
-      copyBtn.addEventListener("click", () => {
-        span.textContent = exposeValue || "";
-      });
-
-      realityTd.appendChild(copyBtn);
-      realityTd.appendChild(span);
-    } else if (field.type === "select") {
-      const select = document.createElement("select");
-      select.style.width = "100%";
-      select.style.padding = "3px 6px";
-      select.style.borderRadius = "10px";
-      select.style.border = "1px solid #dcd3ff";
-
-      const ph = document.createElement("option");
-      ph.value = "";
-      ph.textContent = "Select…";
-      select.appendChild(ph);
-
-      field.options.forEach(o => {
-        const opt = document.createElement("option");
-        opt.value = o;
-        opt.textContent = o;
-        select.appendChild(opt);
-      });
-
-      copyBtn.addEventListener("click", () => {
-        const val = (exposeValue || "").trim();
-        if (!val) return;
-        const opts = Array.from(select.options);
-        let idx = opts.findIndex(o => o.value === val);
-        if (idx === -1) {
-          idx = opts.findIndex(o => val.toLowerCase().includes(o.value.toLowerCase()));
-        }
-        if (idx >= 0) select.selectedIndex = idx;
-      });
-
-      realityTd.appendChild(copyBtn);
-      realityTd.appendChild(select);
-    }
-
-    tr.appendChild(realityTd);
-    comparisonBody.appendChild(tr);
+  // Add red minus circle for NON-mandatory fields
+  if (!isMandatory) {
+    const delBtn = document.createElement("button");
+    delBtn.type = "button";
+    delBtn.className = "trash-inline";
+    delBtn.innerHTML = "−"; // red minus in a circle via CSS
+    delBtn.addEventListener("click", () => {
+      if (confirm("Remove this field from the mask?")) {
+        tr.remove();
+      }
+    });
+    labelWrapper.appendChild(delBtn);
   }
 
-  function addCustomTextRow() {
-    const tr = document.createElement("tr");
-    tr.dataset.rowType = "custom-text";
+  descTd.appendChild(labelWrapper);
+  tr.appendChild(descTd);
 
-    const descTd = document.createElement("td");
-    descTd.dataset.label = "🧾 Field";
+  // Column 2: exposé (read-only)
+  const exposeTd = document.createElement("td");
+  exposeTd.className = "expose-cell";
+  exposeTd.dataset.label = "🏢 Exposé";
+  const exposeValue = EXPOSE_DATA[field.id] || "";
+  exposeTd.textContent = exposeValue;
+  tr.appendChild(exposeTd);
 
-    const fieldSpan = document.createElement("span");
-    fieldSpan.className = "cell-editable";
-    fieldSpan.contentEditable = "true";
-    fieldSpan.textContent = "Custom note";
-    descTd.appendChild(fieldSpan);
+  // Column 3: reality (editable)
+  const realityTd = document.createElement("td");
+  realityTd.className = "editable";
+  realityTd.dataset.label = "✅ Reality";
 
-    const trash = document.createElement("button");
-    trash.type = "button";
-    trash.className = "trash-inline";
-    trash.textContent = "🗑";
-    trash.addEventListener("click", () => {
-      if (confirm("Remove this row?")) tr.remove();
-    });
-    descTd.appendChild(trash);
+  const copyBtn = document.createElement("button");
+  copyBtn.type = "button";
+  copyBtn.className = "copy-btn";
+  copyBtn.textContent = "Copy from exposé";
 
-    const exposeTd = document.createElement("td");
-    exposeTd.dataset.label = "🏢 Exposé";
-    exposeTd.className = "expose-cell";
-    exposeTd.textContent = "";
-
-    const realityTd = document.createElement("td");
-    realityTd.dataset.label = "✅ Reality";
-    realityTd.className = "editable";
-
+  if (field.type === "text") {
     const span = document.createElement("span");
     span.className = "cell-editable";
     span.contentEditable = "true";
+    span.dataset.placeholder = "Write your inspection result…";
     span.innerHTML = '<span style="opacity:0.35;">Write your inspection result…</span>';
+
     span.addEventListener("focus", () => {
       if (span.querySelector("span")) span.textContent = "";
     });
-    realityTd.appendChild(span);
 
-    tr.appendChild(descTd);
-    tr.appendChild(exposeTd);
-    tr.appendChild(realityTd);
-    comparisonBody.appendChild(tr);
+    copyBtn.addEventListener("click", () => {
+      span.textContent = exposeValue || "";
+    });
+
+    realityTd.appendChild(copyBtn);
+    realityTd.appendChild(span);
+  } else if (field.type === "select") {
+    const select = document.createElement("select");
+    select.style.width = "100%";
+    select.style.padding = "3px 6px";
+    select.style.borderRadius = "10px";
+    select.style.border = "1px solid #dcd3ff";
+
+    const ph = document.createElement("option");
+    ph.value = "";
+    ph.textContent = "Select…";
+    select.appendChild(ph);
+
+    field.options.forEach(o => {
+      const opt = document.createElement("option");
+      opt.value = o;
+      opt.textContent = o;
+      select.appendChild(opt);
+    });
+
+    copyBtn.addEventListener("click", () => {
+      const val = (exposeValue || "").trim();
+      if (!val) return;
+      const opts = Array.from(select.options);
+      let idx = opts.findIndex(o => o.value === val);
+      if (idx === -1) {
+        idx = opts.findIndex(o => val.toLowerCase().includes(o.value.toLowerCase()));
+      }
+      if (idx >= 0) select.selectedIndex = idx;
+    });
+
+    realityTd.appendChild(copyBtn);
+    realityTd.appendChild(select);
   }
+
+  tr.appendChild(realityTd);
+  comparisonBody.appendChild(tr);
+}
+
+function addCustomTextRow() {
+  const tr = document.createElement("tr");
+  tr.dataset.rowType = "custom-text";
+
+  const descTd = document.createElement("td");
+  descTd.dataset.label = "🧾 Field";
+
+  const labelWrapper = document.createElement("div");
+  labelWrapper.className = "field-label-wrapper";
+
+  const fieldSpan = document.createElement("span");
+  fieldSpan.className = "cell-editable field-label-text";
+  fieldSpan.contentEditable = "true";
+  fieldSpan.textContent = "Custom note";
+
+  const trash = document.createElement("button");
+  trash.type = "button";
+  trash.className = "trash-inline";
+  trash.innerHTML = "−";
+  trash.addEventListener("click", () => {
+    if (confirm("Remove this row?")) tr.remove();
+  });
+
+  labelWrapper.appendChild(fieldSpan);
+  labelWrapper.appendChild(trash);
+  descTd.appendChild(labelWrapper);
+
+  const exposeTd = document.createElement("td");
+  exposeTd.dataset.label = "🏢 Exposé";
+  exposeTd.className = "expose-cell";
+  exposeTd.textContent = "";
+
+  const realityTd = document.createElement("td");
+  realityTd.dataset.label = "✅ Reality";
+  realityTd.className = "editable";
+
+  const span = document.createElement("span");
+  span.className = "cell-editable";
+  span.contentEditable = "true";
+  span.innerHTML = '<span style="opacity:0.35;">Write your inspection result…</span>';
+  span.addEventListener("focus", () => {
+    if (span.querySelector("span")) span.textContent = "";
+  });
+  realityTd.appendChild(span);
+
+  tr.appendChild(descTd);
+  tr.appendChild(exposeTd);
+  tr.appendChild(realityTd);
+  comparisonBody.appendChild(tr);
+}
+
 
   /* ===== CAMERA / PHOTO ROW ===== */
   const cameraModal = document.getElementById("camera-modal");
@@ -420,84 +450,93 @@
     closeCamera();
   });
 
-  function addPhotoRow() {
-    const tr = document.createElement("tr");
-    tr.dataset.rowType = "photo";
+ function addPhotoRow() {
+  const tr = document.createElement("tr");
+  tr.dataset.rowType = "photo";
 
-    const descTd = document.createElement("td");
-    descTd.dataset.label = "🧾 Field";
-    descTd.textContent = "Photo / comment";
+  const descTd = document.createElement("td");
+  descTd.dataset.label = "🧾 Field";
 
-    const trash = document.createElement("button");
-    trash.type = "button";
-    trash.className = "trash-inline";
-    trash.textContent = "🗑";
-    trash.addEventListener("click", () => {
-      if (confirm("Remove this photo row?")) tr.remove();
-    });
-    descTd.appendChild(trash);
+  const labelWrapper = document.createElement("div");
+  labelWrapper.className = "field-label-wrapper";
 
-    const exposeTd = document.createElement("td");
-    exposeTd.dataset.label = "🏢 Exposé";
-    exposeTd.className = "expose-cell";
-    exposeTd.textContent = "";
+  const titleSpan = document.createElement("span");
+  titleSpan.className = "field-label-text";
+  titleSpan.textContent = "Photo / comment";
 
-    const realityTd = document.createElement("td");
-    realityTd.dataset.label = "✅ Reality";
-    realityTd.className = "editable";
+  const trash = document.createElement("button");
+  trash.type = "button";
+  trash.className = "trash-inline";
+  trash.innerHTML = "−";
+  trash.addEventListener("click", () => {
+    if (confirm("Remove this photo row?")) tr.remove();
+  });
 
-    const wrapper = document.createElement("div");
-    wrapper.className = "photo-wrapper";
+  labelWrapper.appendChild(titleSpan);
+  labelWrapper.appendChild(trash);
+  descTd.appendChild(labelWrapper);
 
-    const img = document.createElement("img");
-    img.className = "photo-preview";
-    img.style.display = "none";
+  const exposeTd = document.createElement("td");
+  exposeTd.dataset.label = "🏢 Exposé";
+  exposeTd.className = "expose-cell";
+  exposeTd.textContent = "";
 
-    const actions = document.createElement("div");
-    actions.className = "photo-actions";
+  const realityTd = document.createElement("td");
+  realityTd.dataset.label = "✅ Reality";
+  realityTd.className = "editable";
 
-    const uploadBtn = document.createElement("button");
-    uploadBtn.type = "button";
-    uploadBtn.textContent = "Upload photo";
-    const fileInput = document.createElement("input");
-    fileInput.type = "file";
-    fileInput.accept = "image/*";
-    fileInput.style.display = "none";
-    uploadBtn.addEventListener("click", () => fileInput.click());
-    fileInput.addEventListener("change", e => {
-      const f = e.target.files[0];
-      if (!f) return;
-      const reader = new FileReader();
-      reader.onload = ev => {
-        img.src = ev.target.result;
-        img.style.display = "block";
-      };
-      reader.readAsDataURL(f);
-    });
+  const wrapper = document.createElement("div");
+  wrapper.className = "photo-wrapper";
 
-    const cameraBtn = document.createElement("button");
-    cameraBtn.type = "button";
-    cameraBtn.textContent = "Use camera";
-    cameraBtn.addEventListener("click", () => openCamera(img));
+  const img = document.createElement("img");
+  img.className = "photo-preview";
+  img.style.display = "none";
 
-    actions.appendChild(uploadBtn);
-    actions.appendChild(cameraBtn);
-    actions.appendChild(fileInput);
+  const actions = document.createElement("div");
+  actions.className = "photo-actions";
 
-    const textarea = document.createElement("textarea");
-    textarea.className = "photo-comment";
-    textarea.placeholder = "Comment (optional)…";
+  const uploadBtn = document.createElement("button");
+  uploadBtn.type = "button";
+  uploadBtn.textContent = "Upload photo";
+  const fileInput = document.createElement("input");
+  fileInput.type = "file";
+  fileInput.accept = "image/*";
+  fileInput.style.display = "none";
+  uploadBtn.addEventListener("click", () => fileInput.click());
+  fileInput.addEventListener("change", e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      img.src = ev.target.result;
+      img.style.display = "block";
+    };
+    reader.readAsDataURL(f);
+  });
 
-    wrapper.appendChild(img);
-    wrapper.appendChild(actions);
-    wrapper.appendChild(textarea);
-    realityTd.appendChild(wrapper);
+  const cameraBtn = document.createElement("button");
+  cameraBtn.type = "button";
+  cameraBtn.textContent = "Use camera";
+  cameraBtn.addEventListener("click", () => openCamera(img));
 
-    tr.appendChild(descTd);
-    tr.appendChild(exposeTd);
-    tr.appendChild(realityTd);
-    comparisonBody.appendChild(tr);
-  }
+  actions.appendChild(uploadBtn);
+  actions.appendChild(cameraBtn);
+  actions.appendChild(fileInput);
+
+  const textarea = document.createElement("textarea");
+  textarea.className = "photo-comment";
+  textarea.placeholder = "Comment (optional)…";
+
+  wrapper.appendChild(img);
+  wrapper.appendChild(actions);
+  wrapper.appendChild(textarea);
+  realityTd.appendChild(wrapper);
+
+  tr.appendChild(descTd);
+  tr.appendChild(exposeTd);
+  tr.appendChild(realityTd);
+  comparisonBody.appendChild(tr);
+}
 
   function buildTable() {
     comparisonBody.innerHTML = "";
