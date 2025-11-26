@@ -380,7 +380,14 @@ tr.drag-over {
 tr.dragging {
   opacity: 0.8;
 }
-
+/* Placeholder gap where the row will land */
+tr.drag-placeholder td {
+  height: 10px;
+  background: #e9e6f3;       /* gray-purple */
+  border-radius: 8px;
+  transition: background 0.15s ease, height 0.15s ease;
+  padding: 0;
+}
 
 
 .table-wrapper {
