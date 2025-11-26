@@ -480,21 +480,40 @@ body {
   color: #4e3e84;
   font-size: 11px;
 }
-.editable {
-  background: #fffefc;
+
+/* Reality column (all editable cells) */
+#comparison-table td.editable {
+  background: #e9fff4;                 /* soft green */
+  border-left: 2px solid #4ecb9f;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  box-sizing: border-box;
+  transition: background 0.2s ease, border-left-color 0.2s ease;
 }
-.cell-editable {
-  display: inline-block;
-  min-height: 20px;
+
+/* Inner editable text / inputs */
+#comparison-table td.editable .cell-editable {
+  display: block;
+  width: 100%;
+  min-height: 24px;
   outline: none;
-  padding: 2px 4px;
+  padding: 6px 8px;
   border-radius: 10px;
-  border: 1px dashed transparent;
+  border: 1px solid #c9efd9;
+  background: #ffffff;
+  box-sizing: border-box;
 }
-.cell-editable:focus {
-  border-color: #c7b4ff;
+
+/* Focus state in Reality */
+#comparison-table td.editable .cell-editable:focus {
+  border-color: #4ecb9f;
+  box-shadow: 0 0 0 2px rgba(78, 203, 159, 0.22);
   background: #fff;
 }
+
+/* Copy button stays as is */
 .copy-btn {
   display: inline-block;
   margin-bottom: 4px;
@@ -509,6 +528,18 @@ body {
 .copy-btn:hover {
   background: #e8ddff;
 }
+
+/* 🔴 Error override when mandatory Reality is missing */
+.row-error td.editable {
+  background: #ffe5e8 !important;
+  border-left-color: #d62839 !important;
+}
+
+.row-error td.editable .cell-editable {
+  border-color: #d62839 !important;
+  box-shadow: 0 0 0 2px rgba(214, 40, 57, 0.23) !important;
+}
+
 
 /* Editable row title (for custom rows) */
 .row-title-editable {
