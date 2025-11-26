@@ -1,6 +1,6 @@
 (function () {
 
-  const APP_VERSION = "1.2.84";    // change per release
+  const APP_VERSION = "1.2.83";    // change per release
 
   
   const { jsPDF } = window.jspdf;
@@ -732,7 +732,6 @@ cameraTrigger.addEventListener("click", () => {
   let lastPdfFilename = null;
   let lastValidatorName = "";
   let logoImageData = null;
-  let lastPdfUrl = null;  
 
   // Try loading Logo.png for header (optional)
   (function loadLogo() {
@@ -761,204 +760,209 @@ cameraTrigger.addEventListener("click", () => {
     });
   }
 
- generateBtn.addEventListener("click", () => {
-  clearValidationErrors();
-  let hasError = false;
+  generateBtn.addEventListener("click", () => {
+    clearValidationErrors();
+    let hasError = false;
 
-  const validator = validatorInput.value.trim();
-  if (!validator) {
-    hasError = true;
-    validatorInput.classList.add("field-error");
-    validatorInput.scrollIntoView({ behavior: "smooth", block: "center" });
-  }
-
-  if (!validateMandatoryFields()) {
-    hasError = true;
-  }
-
-  if (hasError) return;
-
-  const now = new Date();
-  const timeStr =
-    String(now.getHours()).padStart(2, "0") +
-    String(now.getMinutes()).padStart(2, "0");
-
-  const baseName =
-    (EXPOSE_DATA.adresse || "Flat").replace(/[^\w]+/g, "_") || "Flat";
-
-  lastPdfFilename = baseName + "_" + timeStr + ".pdf";
-  lastValidatorName = validator;
-
-  const doc = new jsPDF({ unit: "mm", format: "a4" });
-
-  /* ===== HEADER ===== */
-  doc.setFillColor(30, 12, 60);
-  doc.rect(0, 0, 210, 25, "F");
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "bold");
-  doc.text("Check Your Flat", 12, 12);
-  doc.setFontSize(15);
-  doc.text("Inspection report", 12, 20);
-
-  if (logoImageData) {
-    doc.addImage(logoImageData, "PNG", 178, 4, 24, 17);
-  } else {
-    doc.setDrawColor(255, 184, 92);
-    doc.circle(188, 12, 8);
-    doc.setFontSize(9);
-    doc.text("CYF", 184.5, 14);
-  }
-
-  /* ===== META BLOCK ===== */
-  doc.setTextColor(20, 12, 40);
-  doc.setFontSize(11);
-  let metaY = 38;
-
-  function addMeta(label, value) {
-    // Handles undefined / null / "" — just skip those fields
-    if (value === undefined || value === null) return;
-    const text = String(value).trim();
-    if (!text) return;
-
-    doc.setFont("helvetica", "bold");
-    doc.text(label, 12, metaY);
-    doc.setFont("helvetica", "normal");
-    doc.text(text, 55, metaY); // adjust X as you like
-    metaY += 6;
-  }
-
-  // 👇 This is the modular part.
-  // Change the property names to match your EXPOSE_DATA shape.
-  const metaFields = [
-    { label: "Address:",  value: EXPOSE_DATA.adresse },
-    { label: "Objekt:",   value: EXPOSE_DATA.objekt },      // or objekttyp / whatever you use
-    { label: "Preis:",    value: EXPOSE_DATA.preis },
-    { label: "Fläche:",   value: EXPOSE_DATA.flaeche },
-    { label: "Zimmer:",   value: EXPOSE_DATA.zimmer },
-    { label: "Stockwerk:",value: EXPOSE_DATA.stockwerk },
-    { label: "Validator:",value: validator },
-    { label: "Generated:",value: now.toLocaleString() }
-  ];
-
-  metaFields.forEach(f => addMeta(f.label, f.value));
-
-  /* ===== TABLE HEADING ===== */
-  doc.setFontSize(12);
-  doc.setTextColor(30, 12, 60);
-  doc.setFont("helvetica", "bold");
-  doc.text("Maske Inspektion – inspector notes", 12, metaY);
-  doc.setLineWidth(0.3);
-  doc.setDrawColor(180, 170, 230);
-  doc.line(12, metaY + 2, 198, metaY + 2);
-
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(30, 20, 60);
-  let y = metaY + 9;
-  const lineHeight = 5;
-
-  /* ===== COLLECT ROWS FROM TABLE ===== */
-  const rows = [];
-  comparisonBody.querySelectorAll("tr").forEach(tr => {
-    const type = tr.dataset.rowType || "field";
-    const cells = tr.querySelectorAll("td");
-
-    let desc = "";
-    if (cells[0]) {
-      const firstNode = cells[0].childNodes[0];
-      desc = (firstNode && firstNode.textContent ? firstNode.textContent : "").trim();
+    const validator = validatorInput.value.trim();
+    if (!validator) {
+      hasError = true;
+      validatorInput.classList.add("field-error");
+      validatorInput.scrollIntoView({ behavior: "smooth", block: "center" });
     }
 
-    let reality = "";
-    let photoData = null;
+    if (!validateMandatoryFields()) {
+      hasError = true;
+    }
 
-    if (type === "photo") {
-      const img = tr.querySelector(".photo-preview");
-      const textarea = tr.querySelector(".photo-comment");
-      if (textarea) reality = (textarea.value || "").trim();
-      if (img && img.src && img.style.display !== "none") {
-        photoData = img.src;
-      }
+    if (hasError) return;
+
+    const now = new Date();
+    const timeStr = String(now.getHours()).padStart(2, "0") + String(now.getMinutes()).padStart(2, "0");
+    const baseName = (EXPOSE_DATA.adresse || "Flat").replace(/[^\w]+/g, "_") || "Flat";
+    lastPdfFilename = baseName + "_" + timeStr + ".pdf";
+    lastValidatorName = validator;
+
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+
+    // HEADER
+    doc.setFillColor(30, 12, 60);
+    doc.rect(0, 0, 210, 25, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("Check Your Flat", 12, 12);
+    doc.setFontSize(15);
+    doc.text("Inspection report", 12, 20);
+
+    if (logoImageData) {
+      doc.addImage(logoImageData, "PNG", 178, 4, 24, 17);
     } else {
-      const span = tr.querySelector("td.editable .cell-editable");
-      const select = tr.querySelector("td.editable select");
-      if (span)
-        reality = (span.textContent || "").replace(/\s+/g, " ").trim();
-      if (select && select.value) {
-        reality = select.value;
-      }
+      doc.setDrawColor(255, 184, 92);
+      doc.circle(188, 12, 8);
+      doc.setFontSize(9);
+      doc.text("CYF", 184.5, 14);
     }
 
-    if (!desc && !reality && !photoData) return;
-    rows.push({ type, desc, reality, photoData });
-  });
+    // META
+    doc.setTextColor(20, 12, 40);
+    doc.setFontSize(11);
+    let metaY = 38;
 
-  /* ===== RENDER ROWS INTO PDF ===== */
-  rows.forEach(row => {
-    if (y > 270) {
-      doc.addPage();
-      y = 20;
-    }
-
-    doc.setFont("helvetica", "bold");
-    doc.text("• " + row.desc, 12, y);
-    y += lineHeight;
-
-    if (row.reality) {
+    function addMeta(label, value) {
+      if (!value) return;
+      doc.setFont("helvetica", "bold");
+      doc.text(label, 12, metaY);
       doc.setFont("helvetica", "normal");
-      const textLines = doc.splitTextToSize(row.reality, 180);
-      doc.text(textLines, 18, y);
-      y += lineHeight + (textLines.length - 1) * lineHeight;
+      doc.text(value, 20, metaY + 5);
+      metaY += 11;
     }
 
-    if (row.photoData) {
-      const imgWidth = 60;
-      const imgHeight = 45;
-      if (y + imgHeight > 270) {
+    const dateStr = now.toLocaleString();
+    const addressLine = EXPOSE_DATA.adresse || "";
+
+    addMeta("Address:", addressLine);
+    addMeta("Generated:", dateStr);
+    if (currentFileName) addMeta("Source exposé:", currentFileName);
+    addMeta("Validator (inspector):", validator);
+
+    metaY += 4;
+
+    // TABLE HEADING
+    doc.setFontSize(12);
+    doc.setTextColor(30, 12, 60);
+    doc.setFont("helvetica", "bold");
+    doc.text("Maske Inspektion – inspector notes", 12, metaY);
+    doc.setLineWidth(0.3);
+    doc.setDrawColor(180, 170, 230);
+    doc.line(12, metaY + 2, 198, metaY + 2);
+
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(30, 20, 60);
+    let y = metaY + 9;
+    const lineHeight = 5;
+
+    // Collect rows
+    const rows = [];
+    comparisonBody.querySelectorAll("tr").forEach(tr => {
+      const type = tr.dataset.rowType || "field";
+      const cells = tr.querySelectorAll("td");
+
+      let desc = "";
+      if (cells[0]) {
+        const firstNode = cells[0].childNodes[0];
+        desc = (firstNode && firstNode.textContent ? firstNode.textContent : "").trim();
+      }
+
+      let reality = "";
+      let photoData = null;
+
+      if (type === "photo") {
+        const img = tr.querySelector(".photo-preview");
+        const textarea = tr.querySelector(".photo-comment");
+        if (textarea) reality = (textarea.value || "").trim();
+        if (img && img.src && img.style.display !== "none") {
+          photoData = img.src;
+        }
+      } else {
+        const span = tr.querySelector("td.editable .cell-editable");
+        const select = tr.querySelector("td.editable select");
+        if (span) reality = (span.textContent || "").replace(/\s+/g, " ").trim();
+        if (select && select.value) {
+          reality = select.value;
+        }
+      }
+
+      if (!desc && !reality && !photoData) return;
+      rows.push({ type, desc, reality, photoData });
+    });
+
+    rows.forEach(row => {
+      if (y > 270) {
         doc.addPage();
         y = 20;
       }
-      doc.addImage(row.photoData, "JPEG", 18, y, imgWidth, imgHeight);
-      y += imgHeight + lineHeight;
+
+      doc.setFont("helvetica", "bold");
+      doc.text("• " + row.desc, 12, y);
+      y += lineHeight;
+
+      if (row.reality) {
+        doc.setFont("helvetica", "normal");
+        const textLines = doc.splitTextToSize(row.reality, 180);
+        doc.text(textLines, 18, y);
+        y += lineHeight + (textLines.length - 1) * lineHeight;
+      }
+
+      if (row.photoData) {
+        const imgWidth = 60;
+        const imgHeight = 45;
+        if (y + imgHeight > 270) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.addImage(row.photoData, "JPEG", 18, y, imgWidth, imgHeight);
+        y += imgHeight + lineHeight;
+      }
+    });
+
+    // Signature
+    const sigData = signatureCanvas.toDataURL("image/png");
+    if (sigData) {
+      if (y + 30 > 270) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.setFont("helvetica", "bold");
+      doc.text("Signature:", 12, y);
+      doc.addImage(sigData, "PNG", 40, y - 10, 40, 20);
+      y += 26;
     }
 
-    y += 2;
+    const pdfBlob = doc.output("blob");
+    lastPdfBlob = pdfBlob;
+
+    const url = URL.createObjectURL(pdfBlob);
+    pdfFrame.src = url;
+    modalValidatorLabel.textContent = validator;
+    modalValidatorFooter.textContent = "Check the PDF. If OK, approve & download.";
+    modalBackdrop.classList.add("visible");
   });
 
-  /* ===== SIGNATURE ===== */
-  const sigData = signaturePad.isEmpty()
-    ? null
-    : signaturePad.toDataURL("image/png");
-
-  if (sigData) {
-    if (y + 30 > 270) {
-      doc.addPage();
-      y = 20;
+  function closeModal() {
+    modalBackdrop.classList.remove("visible");
+    pdfFrame.src = "";
+    if (lastPdfBlob) {
+      URL.revokeObjectURL(lastPdfBlob);
+      lastPdfBlob = null;
     }
-    doc.setFont("helvetica", "bold");
-    doc.text("Signature:", 12, y);
-    doc.addImage(sigData, "PNG", 40, y - 10, 40, 20);
-    y += 26;
   }
 
-  /* ===== CREATE BLOB + PREVIEW URL ===== */
-  const pdfBlob = doc.output("blob");
-  lastPdfBlob = pdfBlob;
+  closeModalBtn.addEventListener("click", closeModal);
+  cancelDownloadBtn.addEventListener("click", closeModal);
 
-  // clean up old preview URL if there was one
-  if (lastPdfUrl) {
-    URL.revokeObjectURL(lastPdfUrl);
-    lastPdfUrl = null;
-  }
+  approveDownloadBtn.addEventListener("click", () => {
+    if (!lastPdfBlob || !lastPdfFilename) return;
+    const url = URL.createObjectURL(lastPdfBlob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = lastPdfFilename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
 
-  lastPdfUrl = URL.createObjectURL(pdfBlob);
-  pdfFrame.src = lastPdfUrl;
+    saveHistoryEntry({
+      filename: lastPdfFilename,
+      when: new Date().toLocaleString(),
+      address: EXPOSE_DATA.adresse || "",
+      validator: lastValidatorName || ""
+    });
 
-  modalValidatorLabel.textContent = validator;
-  modalValidatorFooter.textContent = "Check the PDF. If OK, approve & download.";
-  modalBackdrop.classList.add("visible");
-});
+    closeModal();
+    renderHistory();
+    renderVersionInfo();
+  });
 
   /* ========= HISTORY ========= */
   const HISTORY_KEY = "cyf-history-v3";
