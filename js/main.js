@@ -1021,4 +1021,5 @@ cameraTrigger.addEventListener("click", () => {
   }
 
   renderHistory();
+  renderVersionInfo();   // 👈 add this line
 })();
