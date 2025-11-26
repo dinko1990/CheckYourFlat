@@ -1,6 +1,6 @@
 (function () {
 
-  const APP_VERSION = "1.2.98";    // change per release
+  const APP_VERSION = "1.3.20";    // change per release
 
   
   const { jsPDF } = window.jspdf;
@@ -435,21 +435,33 @@ function makeRowDraggable(tr) {
   tr.draggable = true;
   tr.classList.add("row-draggable");
 
+  /* When dragging starts */
   tr.addEventListener("dragstart", function (e) {
     dragSrcRow = tr;
     tr.classList.add("dragging");
+
     e.dataTransfer.effectAllowed = "move";
-    e.dataTransfer.setData("text/plain", "");
+    e.dataTransfer.setData("text/plain", ""); // required for Firefox
   });
 
+  /* When dragging ends */
   tr.addEventListener("dragend", function () {
     tr.classList.remove("dragging");
     dragSrcRow = null;
+
+    // Remove ALL previews
+    comparisonBody.querySelectorAll("tr").forEach(r =>
+      r.classList.remove("drag-over")
+    );
   });
 
+  /* While dragging over another row */
   tr.addEventListener("dragover", function (e) {
     e.preventDefault();
     if (!dragSrcRow || dragSrcRow === tr) return;
+
+    // highlight preview
+    tr.classList.add("drag-over");
 
     const tbody = tr.parentNode;
     const rect = tr.getBoundingClientRect();
@@ -457,8 +469,10 @@ function makeRowDraggable(tr) {
     const half = rect.height / 2;
 
     if (offset < half) {
+      // insert before
       tbody.insertBefore(dragSrcRow, tr);
     } else {
+      // insert after
       if (tr.nextSibling) {
         tbody.insertBefore(dragSrcRow, tr.nextSibling);
       } else {
@@ -467,8 +481,15 @@ function makeRowDraggable(tr) {
     }
   });
 
+  /* When leaving a row without dropping */
+  tr.addEventListener("dragleave", function () {
+    tr.classList.remove("drag-over");
+  });
+
+  /* When dropping ON a row (for safety cleanup) */
   tr.addEventListener("drop", function (e) {
     e.preventDefault();
+    tr.classList.remove("drag-over");
   });
 }
 
