@@ -77,7 +77,7 @@ function renderVersionInfo() {
   if (!el) return;
 
   let text = `Version ${APP_VERSION}`;
-  if (APP_COMMIT) text += ` · ${APP_COMMIT}`;
+
 
   el.textContent = text;
 }
