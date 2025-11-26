@@ -583,24 +583,6 @@ body {
 
 
 /* custom rows */
-.trash-inline {
-  width: 22px;
-  height: 22px;
-  border-radius: 6px;
-  border: 1.5px solid #e85d6a;
-  background: #fff;
-  color: #d62839;
-  font-size: 16px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  padding: 0;
-  font-weight: 700;
-}
-.trash-inline:hover {
-  background: #ffe8ea;
-}
 
 .table-actions {
   display: flex;
