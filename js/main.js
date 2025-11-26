@@ -1,6 +1,6 @@
 (function () {
 
-  const APP_VERSION = "1.2.83";    // change per release
+  const APP_VERSION = "1.2.84";    // change per release
 
   
   const { jsPDF } = window.jspdf;
