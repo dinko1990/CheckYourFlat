@@ -129,56 +129,34 @@ function addFieldRow(field) {
 
 function addCustomTextRow() {
   const tr = document.createElement("tr");
-  tr.dataset.rowType = "custom-text";
+  tr.dataset.rowType = "custom";
 
-  /* ----- FIELD TITLE (editable, blue) ----- */
-  const descTd = document.createElement("td");
-  descTd.dataset.label = "🧾 Field";
+  tr.innerHTML = `
+    <td class="field-label">
+      <input type="text" class="custom-title-input" value="Custom note" />
+    </td>
 
-  const labelWrapper = document.createElement("div");
-  labelWrapper.className = "field-label-wrapper custom-row-title";
+    <td class="expose-cell empty"></td>
 
-  const fieldSpan = document.createElement("span");
-  fieldSpan.className = "cell-editable custom-title";
-  fieldSpan.contentEditable = "true";
-  fieldSpan.textContent = "Custom note";
+    <td class="editable">
+      <div class="cell-editable" contenteditable="true">Write your custom note...</div>
+    </td>
 
-  const delBtn = document.createElement("button");
-  delBtn.type = "button";
-  delBtn.className = "trash-inline";
-  delBtn.innerHTML = "×";
-  delBtn.addEventListener("click", () => {
-    if (confirm("Remove this custom row?")) tr.remove();
+    <td class="trash-cell">
+      <button class="trash-inline">✖</button>
+    </td>
+  `;
+
+  tr.classList.add("custom-row");
+
+  comparisonBody.appendChild(tr);
+
+  // Delete button
+  tr.querySelector(".trash-inline").addEventListener("click", () => {
+    tr.remove();
   });
-
-  labelWrapper.appendChild(fieldSpan);
-  labelWrapper.appendChild(delBtn);
-  descTd.appendChild(labelWrapper);
-
-  /* ----- REALITY CELL (editable, spans Exposé + Reality) ----- */
-  const realityTd = document.createElement("td");
-  realityTd.className = "editable";
-  realityTd.dataset.label = "✅ Reality";
-  realityTd.colSpan = 2;    // 👈 spans Exposé + Reality columns
-
-  const realityInner = document.createElement("div");
-  realityInner.className = "editable-inner";
-  
-  const editableDiv = document.createElement("div");
-  editableDiv.className = "cell-editable";
-  editableDiv.contentEditable = "true";
-  editableDiv.textContent = "";
-
-  realityTd.appendChild(editableDiv);
-
-  /* ----- append cells ----- */
-  tr.appendChild(descTd);
-  tr.appendChild(realityTd);
-
-  document.querySelector("#comparison-table tbody").appendChild(tr);
-    makeRowDraggable(tr); 
-
 }
+
 
 // --- Drag & drop rows in comparison table ---
 
