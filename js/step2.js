@@ -18,7 +18,7 @@
 function addFieldRow(field) {
   const tr = document.createElement("tr");
   tr.dataset.rowType = "field";
-  tr.dataset.fieldId = field.id;
+  tr.dataset.fieldId = field.id; // used by mock auto-fill
 
   const isMandatory = MANDATORY_FIELDS.includes(field.id);
   if (isMandatory) tr.classList.add("mandatory-row");
@@ -470,13 +470,39 @@ cameraTrigger.addEventListener("click", () => {
     buildTable();
   });
 
-  mockAutofillBtn.addEventListener("click", () => {
-    const spans = comparisonBody.querySelectorAll("tr[data-row-type='field'] td.editable .cell-editable");
-    spans.forEach((span, idx) => {
-      const note = SAMPLE_NOTES[idx % SAMPLE_NOTES.length];
-      span.textContent = note;
-    });
+ // Auto-fill sample notes (mock)
+// - Fills ONLY empty Reality cells
+// - Does NOT overwrite what the user already typed
+// - Uses German, field-specific mock notes from SAMPLE_NOTES
+mockAutofillBtn.addEventListener("click", () => {
+  const rows = comparisonBody.querySelectorAll("tr[data-row-type='field']");
+
+  rows.forEach((tr) => {
+    const fieldId = tr.dataset.fieldId;
+    if (!fieldId) return;
+
+    const realityCell = tr.querySelector("td.editable");
+    if (!realityCell) return;
+
+    const span = realityCell.querySelector(".cell-editable");
+    if (!span) {
+      // If you later want to auto-select default <select> options,
+      // you can handle fields without .cell-editable here.
+      return;
+    }
+
+    const current = span.textContent.replace(/\s+/g, " ").trim();
+
+    // Do NOT overwrite anything meaningful the user entered
+    if (current && current !== "Write your inspection result…") {
+      return;
+    }
+
+    const note = SAMPLE_NOTES[fieldId] || SAMPLE_NOTE_DEFAULT;
+    span.textContent = note;
   });
+});
+
 
   function validateMandatoryFields() {
     let ok = true;
