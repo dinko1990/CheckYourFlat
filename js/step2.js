@@ -470,10 +470,10 @@ cameraTrigger.addEventListener("click", () => {
     buildTable();
   });
 
- // Auto-fill sample notes (mock)
-// - Fills ONLY empty Reality cells
-// - Does NOT overwrite what the user already typed
-// - Uses German, field-specific mock notes from SAMPLE_NOTES
+// Auto-fill sample notes (mock)
+// - Text fields: fill only empty Reality cells with SAMPLE_NOTES
+// - Select fields: if Reality empty/unbekannt and EXPOSE_DATA has a matching value,
+//                  set the select to that value
 mockAutofillBtn.addEventListener("click", () => {
   const rows = comparisonBody.querySelectorAll("tr[data-row-type='field']");
 
@@ -484,17 +484,50 @@ mockAutofillBtn.addEventListener("click", () => {
     const realityCell = tr.querySelector("td.editable");
     if (!realityCell) return;
 
-    const span = realityCell.querySelector(".cell-editable");
-    if (!span) {
-      // If you later want to auto-select default <select> options,
-      // you can handle fields without .cell-editable here.
-      return;
+    const fieldCfg = EXPOSE_FIELDS[fieldId];
+
+    // -------------------------
+    // 1) SELECT FIELDS
+    // -------------------------
+    if (fieldCfg && fieldCfg.type === "select") {
+      const selectEl = realityCell.querySelector("select");
+      if (!selectEl) return;
+
+      const current = (selectEl.value || "").trim();
+
+      // Do NOT override user choice if they already picked something
+      // (we treat "unbekannt" as the "empty" default)
+      if (current && current !== "" && current !== "unbekannt") {
+        return;
+      }
+
+      const exposeVal = (EXPOSE_DATA[fieldId] || "").trim();
+      if (!exposeVal) return;
+
+      // Try to find an option whose value OR visible text matches the exposé value
+      const match = Array.from(selectEl.options).find((opt) => {
+        const optVal = (opt.value || "").trim();
+        const optText = (opt.textContent || "").trim();
+        return optVal === exposeVal || optText === exposeVal;
+      });
+
+      if (match) {
+        selectEl.value = match.value;
+      }
+
+      return; // we handled this row as a select-field
     }
 
-    const current = span.textContent.replace(/\s+/g, " ").trim();
+    // -------------------------
+    // 2) TEXT-LIKE FIELDS
+    // -------------------------
+    const span = realityCell.querySelector(".cell-editable");
+    if (!span) return;
 
-    // Do NOT overwrite anything meaningful the user entered
-    if (current && current !== "Write your inspection result…") {
+    const currentText = span.textContent.replace(/\s+/g, " ").trim();
+
+    // Do NOT overwrite meaningful user input
+    if (currentText && currentText !== "Write your inspection result…") {
       return;
     }
 
