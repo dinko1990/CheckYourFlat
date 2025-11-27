@@ -313,28 +313,6 @@ tr.drag-placeholder td {
   border-color: #f5c694;
 }
 
-/* Custom row looks consistent but slightly highlighted */
-.custom-row td {
-  background: #eaf3ff;
-}
-
-/* Custom title input matches label alignment */
-.custom-title-input {
-  width: 100%;
-  border: none;
-  background: transparent;
-  font-weight: 600;
-  font-size: 14px;
-  outline: none;
-  padding: 4px 0;
-}
-
-/* Match standard row padding */
-.custom-row td {
-  padding: 6px 8px;
-}
-
-
 /* photo rows */
 .photo-wrapper {
   display: flex;
