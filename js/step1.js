@@ -61,7 +61,7 @@
     EXPOSE_DATA.fenster_material = "";
     EXPOSE_DATA.fenster_verglas  = "";
     EXPOSE_DATA.baujahr_fenster  = "";
-    EXPOSE_DATA.heizung          = "Fernwärme   (Gas)";
+    EXPOSE_DATA.heizung          = "Fernwärme (Gas)";
     EXPOSE_DATA.baujahr_heizung  = "";
     EXPOSE_DATA.warmwasser       = "zentral (mit Warmwasser)";
   }
