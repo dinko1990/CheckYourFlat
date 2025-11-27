@@ -1,0 +1,368 @@
+/* layout.css
+ * Overall app layout: sidebar, main content, hero/header, and floating step bar.
+ * Split from original style.css for better structure.
+ */
+
+/* ====== LAYOUT SHELL (SIDEBAR + MAIN) ====== */
+.app {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* SIDEBAR (desktop) */
+.sidebar {
+  width: 260px;
+  background: #1c0f33;
+  color: #f7f6ff;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 18px;
+  position: relative;
+  transition: width 0.2s ease, padding 0.2s ease;
+}
+.sidebar.collapsed {
+  width: 72px;
+  padding: 20px 10px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.brand-logo {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffc977, #ff88ae);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 18px;
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.15);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.brand-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.brand-text h1 {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.brand-text span {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+/* ----------------------------------------
+   SIDEBAR (EXPANDED & COLLAPSED)
+   ---------------------------------------- */
+
+/* Default brand layout (expanded sidebar) */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+/* Collapse mode: shrink brand container */
+.sidebar.collapsed .brand {
+  justify-content: center;     /* center logo */
+}
+
+/* When sidebar collapsed → hide ALL text */
+.sidebar.collapsed .brand-text {
+  display: none !important;
+}
+
+/* Keep only the logo in collapsed mode */
+.sidebar.collapsed .brand-logo {
+  margin: 0 auto;
+  padding: 0;
+}
+
+/* Collapse → navigation icons centered */
+.sidebar.collapsed nav .nav-item {
+  justify-content: center;
+  padding-inline: 0;
+}
+
+/* Collapse → hide navigation labels (text) */
+.sidebar.collapsed nav .nav-item span:not(.icon) {
+  display: none !important;
+}
+
+.sidebar-toggle {
+  position: absolute;
+  top: 16px;
+  right: -12px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #241238;
+  border: 2px solid #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+  z-index: 10;
+}
+
+.sidebar nav {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+.nav-item {
+  background: transparent;
+  border: none;
+  color: #e9e8ff;
+  padding: 10px 12px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.08s ease;
+}
+.nav-item .icon {
+  font-size: 16px;
+}
+.nav-item:hover {
+  background: #2a1748;
+  transform: translateY(-1px);
+}
+.nav-item.active {
+  background: linear-gradient(135deg, #ffc977, #ff88ae);
+  color: #fff;
+}
+.nav-logout {
+  margin-top: auto;
+  background: rgba(244, 67, 54, 0.08);
+  color: #ffaaaa;
+}
+.nav-logout:hover {
+  background: rgba(244, 67, 54, 0.16);
+}
+
+/* MAIN AREA */
+.main {
+  flex: 1;
+  padding: 20px 20px 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* HERO */
+.hero {
+  margin-bottom: 20px;
+  padding: 16px 16px 20px;
+  border-radius: 18px;
+  background: radial-gradient(circle at 0 0, #ffe9c7, #f3e8ff 48%, #e3f0ff 100%);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 18px 45px rgba(24, 1, 53, 0.13);
+}
+
+.hero-title {
+  font-size: 32px;
+  text-transform: lowercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+.hero-subtitle {
+  font-size: 13px;
+  max-width: 620px;
+  color: #43375f;
+}
+.hero-wave {
+  position: absolute;
+  right: -60px;
+  top: -30px;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.7), transparent 55%);
+  opacity: 0.9;
+}
+
+/* CARD SHELL */
+.content {
+  margin-top: 16px;
+}
+.card-shell {
+  position: relative;
+}
+
+/* FLOATING STEPS */
+.steps-floating {
+  position: sticky;
+  top: 10px;
+  z-index: 15;
+  display: flex;
+  justify-content: center; /* center instead of right */
+  margin-bottom: 10px;
+}
+
+.steps-inner {
+  display: inline-flex;
+  padding: 4px;
+  border-radius: 999px;
+  box-shadow: 0 12px 25px rgba(42, 8, 80, 0.18);
+  gap: 4px;
+  background:#241238;
+}
+.steps-inner button {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: none;
+  font-size: 13px;
+  cursor: pointer;
+  background:#241238;
+  color: #5d4e8e;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.08s ease;
+}
+.steps-inner button.unlocked {
+  background: rgba(125, 92, 255, 0.09);
+}
+.steps-inner button.active {
+  background: linear-gradient(135deg, #ffc977, #ff88ae);
+  color: #fff;
+  transform: translateY(-1px);
+}
+.steps-inner button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* CARDS */
+.card {
+  background: #fff;
+  border-radius: 18px;
+  padding: 16px 16px 18px;
+  box-shadow: 0 18px 45px rgba(24, 1, 53, 0.08);
+  margin-bottom: 16px;
+  font-size: 16px; /* or 15px or 16px */
+}
+.step-disabled {
+  opacity: 0.38;
+  pointer-events: none;
+}
+.step-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.step-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.step-chip {
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 11px;
+  background: #241238;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.step-badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #f0ecff;
+  color: #5c4f94;
+}
+
+.step-help {
+  font-size: 11px;
+  color: #7a719d;
+  text-align: right;
+}
+
+.step-disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+
+/* UPLOAD AREA */
+.upload-area {
+  border-radius: 16px;
+  border: 1.5px dashed #d5c9ff;
+  padding: 16px;
+  text-align: center;
+  background: #fbfaff;
+}
+.upload-area.dragover {
+  background: #f0ebff;
+}
+.upload-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+.upload-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.upload-subtitle {
+  font-size: 12px;
+  color: #7a719d;
+  margin-bottom: 10px;
+}
+.upload-btn-main {
+  margin-top: 4px;
+  margin-bottom: 8px;
+  border-radius: 999px;
+  padding: 6px 14px;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #ffc977, #ff88ae); /* orange → pink/purple */
+  color: #1b1330;
+  box-shadow: 0 10px 20px rgba(71, 32, 149, 0.35);
+}
+.upload-btn-main:hover {
+  filter: brightness(1.03);
+}
+.file-info {
+  font-size: 11px;
+  color: #5e4e99;
+  margin-top: 4px;
+  margin-bottom: 8px;
+}
+.example-chip {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(44, 174, 98, 0.1);
+  color: #2e7d51;
+  font-size: 11px;
+  cursor: pointer;
+}
+

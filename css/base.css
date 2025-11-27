@@ -1,0 +1,13 @@
+/* base.css
+ * Global reset, base typography, and page background.
+ * Split from original style.css for better structure.
+ */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #f4f4ff;
+  color: #1b1330;
+}
+
