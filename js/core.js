@@ -6,7 +6,7 @@
 // - Shared data structures (EXPOSE_DATA, inspection fields, mandatory fields, sample notes)
 // Extracted from the original main.js to keep things organized.
 
-const APP_VERSION = "2.2.1";    // change per release
+const APP_VERSION = "2.2.3";    // change per release
 
   
   const { jsPDF } = window.jspdf;
@@ -127,64 +127,195 @@ function renderVersionInfo() {
 
   /* ========= DATA CONFIG ========= */
 
-  // Exposé data (will be filled by fake Berlin or future PDF wizard)
-  const EXPOSE_DATA = {
-    adresse: "",
-    objekttyp: "",
-    baujahr: "",
-    wohnflaeche: "",
-    grundstueck: "",
-    etage: "",
-    vollgeschosse: "",
-    keller: "",
-    fassade_daemmung: "",
-    dachgeschoss: "",
-    straenge: "",
-    fenster_material: "",
-    fenster_verglas: "",
-    baujahr_fenster: "",
-    heizung: "",
-    baujahr_heizung: "",
-    warmwasser: ""
+/**
+ * EXPOSE_FIELDS:
+ * - schema of all expected fields
+ * - label: text shown in the table
+ * - type: "text" | "select"
+ * - options: only for select fields
+ * - mandatory: whether Reality must be filled before continuing
+ */
+const EXPOSE_FIELDS = {
+  adresse: {
+    label: "Adresse",
+    type: "text",
+    mandatory: true
+  },
+  objekttyp: {
+    label: "Objekttyp",
+    type: "select",
+    options: ["Etagenwohnung", "Wohnung", "Einfamilienhaus", "Gewerbe", "MFH"],
+    mandatory: false
+  },
+  baujahr: {
+    label: "Baujahr",
+    type: "text",
+    mandatory: false
+  },
+  wohnflaeche: {
+    label: "Wohnfläche",
+    type: "text",
+    mandatory: true
+  },
+  grundstueck: {
+    label: "bei Haus Grundstücksfläche",
+    type: "text",
+    mandatory: false
+  },
+  etage: {
+    label: "Etage",
+    type: "text",
+    mandatory: false
+  },
+  vollgeschosse: {
+    label: "wieviele Vollgeschosse",
+    type: "text",
+    mandatory: false
+  },
+  keller: {
+    label: "Keller",
+    type: "text",
+    mandatory: true
+  },
+  fassade_daemmung: {
+    label: "Fassade – Dämmung",
+    type: "select",
+    options: ["unbekannt", "Dämmung", "keine Dämmung"],
+    mandatory: false
+  },
+  dachgeschoss: {
+    label: "Dachgeschoss",
+    type: "select",
+    options: ["unbekannt", "ausgebaut", "nicht ausgebaut", "Flachdach"],
+    mandatory: false
+  },
+  straenge: {
+    label: "Stränge erneuert",
+    type: "select",
+    options: ["unbekannt", "Ja", "Nein"],
+    mandatory: false
+  },
+  fenster_material: {
+    label: "Fenster Material",
+    type: "select",
+    options: ["unbekannt", "Holz", "Kunststoff", "Sonstiges"],
+    mandatory: false
+  },
+  fenster_verglas: {
+    label: "Fenster Verglasung",
+    type: "select",
+    options: ["unbekannt", "Einfach verglast", "Doppelt verglast", "Sonstiges"],
+    mandatory: false
+  },
+  baujahr_fenster: {
+    label: "Baujahr Fenster",
+    type: "text",
+    mandatory: false
+  },
+  heizung: {
+    label: "Heizung",
+    type: "select",
+    options: [
+      "unbekannt",
+      "Ofenheizung",
+      "Gas-Etagenheizung",
+      "Gas-Zentralheizung",
+      "Öl-Zentralheizung",
+      "Fernwärme",
+      "Fernwärme (Gas)",
+      "Sonstiges"
+    ],
+    mandatory: false
+  },
+  baujahr_heizung: {
+    label: "Baujahr Heizung",
+    type: "text",
+    mandatory: false
+  },
+  warmwasser: {
+    label: "Warmwasser",
+    type: "select",
+    options: ["unbekannt", "zentral", "zentral (mit Warmwasser)", "dezentral"],
+    mandatory: false
+  }
+};
+
+/**
+ * EXPOSE_DATA:
+ * - actual values for each field
+ * - initially empty, filled by fake Berlin or future PDF wizard
+ */
+const EXPOSE_DATA = Object.fromEntries(
+  Object.keys(EXPOSE_FIELDS).map((id) => [id, ""])
+);
+
+/**
+ * MANDATORY_FIELDS:
+ * - IDs of fields that must be filled in the Reality column
+ * - currently derived from EXPOSE_FIELDS.mandatory
+ *   (Adresse, Wohnfläche, Keller)
+ */
+const MANDATORY_FIELDS = Object.keys(EXPOSE_FIELDS).filter(
+  (id) => EXPOSE_FIELDS[id].mandatory
+);
+
+/**
+ * inspectionFields:
+ * - template used by the current table engine
+ * - built from EXPOSE_FIELDS so later the "engine" can replace it
+ *   without changing the UI code
+ */
+const inspectionFields = Object.keys(EXPOSE_FIELDS).map((id) => {
+  const cfg = EXPOSE_FIELDS[id];
+  return {
+    id,
+    label: cfg.label,
+    type: cfg.type,
+    options: cfg.options || []
   };
+});
 
-  // Mandatory fields for Reality column
-  const MANDATORY_FIELDS = ["adresse", "wohnflaeche", "keller"];
+/**
+ * SAMPLE_NOTES:
+ * - mock notes PER FIELD (German)
+ * - used ONLY by the button: 🧪 Auto-fill sample notes (mock)
+ * - we will fill ONLY empty Reality cells and not overwrite manual input
+ */
+const SAMPLE_NOTES = {
+  adresse: "Adresse vor Ort geprüft, entspricht dem Exposé.",
+  objekttyp: "Nutzung entspricht der Beschreibung im Exposé.",
+  baujahr:
+    "Baujahr laut Unterlagen plausibel, keine besonderen Auffälligkeiten.",
+  wohnflaeche:
+    "Wohnfläche überschlägig nachgemessen, Abweichungen im üblichen Rahmen.",
+  grundstueck:
+    "Grundstücksfläche nicht im Detail geprüft, Plausibilität gegeben.",
+  etage: "Lage der Einheit im Gebäude bestätigt.",
+  vollgeschosse:
+    "Anzahl der Vollgeschosse entspricht dem sichtbaren Bestand.",
+  keller: "Kellerabteil vorhanden, Zustand dem Alter entsprechend.",
+  fassade_daemmung:
+    "Fassade optisch geprüft, genaue Dämmqualität nicht geöffnet.",
+  dachgeschoss:
+    "Dachgeschoss von unten begutachtet, keine augenfälligen Mängel.",
+  straenge: "Stränge soweit einsehbar in ordentlichem Zustand.",
+  fenster_material:
+    "Fensterrahmen optisch geprüft, keine gravierenden Beschädigungen.",
+  fenster_verglas:
+    "Verglasung ohne sichtbare Risse, übliche Gebrauchsspuren vorhanden.",
+  baujahr_fenster:
+    "Baujahr der Fenster laut Angaben, Plausibilitätsprüfung ohne Auffälligkeiten.",
+  heizung:
+    "Heizungsanlage in Betrieb, keine außergewöhnlichen Geräusche festgestellt.",
+  baujahr_heizung:
+    "Baujahr der Heizung gemäß Unterlagen, mittelfristiger Ersatz prüfen.",
+  warmwasser:
+    "Warmwasserversorgung funktionstüchtig, Temperaturverlauf plausibel."
+};
 
-  // "Template" table structure
-  const inspectionFields = [
-    { id: "adresse",          label: "Adresse",                      type: "text" },
-    { id: "objekttyp",        label: "Objekttyp",                    type: "select",
-      options: ["Etagenwohnung","Wohnung","Einfamilienhaus","Gewerbe","MFH"] },
-    { id: "baujahr",          label: "Baujahr",                      type: "text" },
-    { id: "wohnflaeche",      label: "Wohnfläche",                   type: "text" },
-    { id: "grundstueck",      label: "bei Haus Grundstücksfläche",   type: "text" },
-    { id: "etage",            label: "Etage",                        type: "text" },
-    { id: "vollgeschosse",    label: "wieviele Vollgeschosse",       type: "text" },
-    { id: "keller",           label: "Keller",                       type: "text" }, // mandatory
-    { id: "fassade_daemmung", label: "Fassade – Dämmung",            type: "select",
-      options: ["unbekannt","Dämmung","keine Dämmung"] },
-    { id: "dachgeschoss",     label: "Dachgeschoss",                 type: "select",
-      options: ["unbekannt","ausgebaut","nicht ausgebaut","Flachdach"] },
-    { id: "straenge",         label: "Stränge erneuert",             type: "select",
-      options: ["unbekannt","Ja","Nein"] },
-    { id: "fenster_material", label: "Fenster Material",             type: "select",
-      options: ["unbekannt","Holz","Kunststoff","Sonstiges"] },
-    { id: "fenster_verglas",  label: "Fenster Verglasung",           type: "select",
-      options: ["unbekannt","Einfach verglast","Doppelt verglast","Sonstiges"] },
-    { id: "baujahr_fenster",  label: "Baujahr Fenster",              type: "text" },
-    { id: "heizung",          label: "Heizung",                      type: "select",
-      options: ["unbekannt","Ofenheizung","Gas-Etagenheizung","Gas-Zentralheizung",
-                "Öl-Zentralheizung","Fernwärme","Fernwärme (Gas)","Sonstiges"] },
-    { id: "baujahr_heizung",  label: "Baujahr Heizung",              type: "text" },
-    { id: "warmwasser",       label: "Warmwasser",                   type: "select",
-      options: ["unbekannt","zentral","zentral (mit Warmwasser)","dezentral"] }
-  ];
+/**
+ * Default text for fields that have no specific SAMPLE_NOTES entry.
+ */
+const SAMPLE_NOTE_DEFAULT =
+  "Keine besonderen Auffälligkeiten festgestellt, Zustand dem Alter entsprechend.";
 
-  const SAMPLE_NOTES = [
-    "Looks as described, no visible defects.",
-    "Walls freshly painted, minor scratches on floor.",
-    "Windows close properly, no drafts felt.",
-    "Bathroom ventilation needs checking.",
-    "Heating seems older, might require service soon."
-  ];
