@@ -372,6 +372,76 @@ tr.drag-placeholder td {
 }
 
 
+/* ===== LEGAL & FINANCE STEP ===== */
+
+.legal-finance-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.lf-block {
+  background: #f8f7ff;
+  border-radius: 12px;
+  padding: 12px 14px;
+  border: 1px solid #e0dcff;
+}
+
+.lf-question {
+  font-weight: 600;
+  font-size: 14px;
+  color: #20123f;
+  margin-bottom: 8px;
+}
+
+.lf-toggle-group {
+  display: inline-flex;
+  gap: 8px;
+  padding: 4px;
+  border-radius: 999px;
+  background: #ece9ff;
+  margin-bottom: 8px;
+}
+
+.lf-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.lf-toggle input {
+  display: none;
+}
+
+.lf-toggle-pill {
+  font-size: 13px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  user-select: none;
+  color: #4a3e88;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.lf-toggle input:checked + .lf-toggle-pill {
+  background: #4c3fff;
+  color: #ffffff;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4);
+}
+
+.lf-hint {
+  font-size: 12px;
+  color: #6b678c;
+}
+
+/* Error state when not answered */
+.lf-toggle-group.lf-error {
+  box-shadow: 0 0 0 2px #ff6b6b;
+  background: #ffeaea;
+}
+
+
 /* history */
 .history-title {
   font-size: 13px;
