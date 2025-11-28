@@ -98,3 +98,20 @@ function validateLegalFinance() {
     needsFinanceContact: !!hasFinanceNo
   };
 }
+
+const goStep4Btn = document.getElementById("go-step4-btn");
+
+if (goStep4Btn) {
+  goStep4Btn.addEventListener("click", () => {
+    // Use your existing Legal/Finance validation
+    const lfResult = validateLegalFinance(); // from step3.js
+    if (!lfResult.valid) return; // don't proceed if toggles not answered
+
+    unlockStep(4);
+    const step4Card = document.getElementById("step4-card");
+    if (step4Card) {
+      step4Card.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  });
+}
+
