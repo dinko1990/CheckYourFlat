@@ -153,7 +153,7 @@ const EXPOSE_FIELDS = {
     mandatory: true
   },
   wohnflaeche: {
-    label: "Wohnfläche",
+    label: "Wohnfläche gemäß Expose",
     type: "text",
     mandatory: false
   },
