@@ -55,7 +55,7 @@
     EXPOSE_DATA.etage            = "2";
     EXPOSE_DATA.vollgeschosse    = "5";
     EXPOSE_DATA.keller           = "Kellerabteil vorhanden";
-    EXPOSE_DATA.fassade_daemmung = "";
+    EXPOSE_DATA.fassade_daemmung = "Dämmung";
     EXPOSE_DATA.dachgeschoss     = "";
     EXPOSE_DATA.straenge         = "";
     EXPOSE_DATA.fenster_material = "";
