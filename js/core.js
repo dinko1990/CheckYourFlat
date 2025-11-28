@@ -235,7 +235,7 @@ const EXPOSE_FIELDS = {
   warmwasser: {
     label: "Warmwasser",
     type: "select",
-    options: ["unbekannt", "zentral", "zentral (mit Warmwasser)", "dezentral"],
+    options: ["unbekannt", "zentral", "dezentral"],
     mandatory: false
   }
 };
