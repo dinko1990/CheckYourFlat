@@ -11,13 +11,17 @@
   <link rel="stylesheet" href="css/layout.css" />
   <link rel="stylesheet" href="css/components.css" />
   <link rel="stylesheet" href="css/responsive.css" />
+
   <!-- jsPDF for PDF generation -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- App scripts -->
   <script src="js/core.js" defer></script>
-<script src="js/step1.js" defer></script>
-<script src="js/step2.js" defer></script>
-<script src="js/step3.js" defer></script>
-<script src="js/history.js" defer></script>
+  <script src="js/step1.js" defer></script>
+  <script src="js/step2.js" defer></script>
+  <script src="js/step3.js" defer></script>  <!-- NEW: Legal & Finance -->
+  <script src="js/step4.js" defer></script>  <!-- NEW: Validator + PDF -->
+  <script src="js/history.js" defer></script>
 </head>
 <body>
 <div class="app">
@@ -26,7 +30,8 @@
     <div class="brand">
       <div class="brand-logo">
         <!-- If Logo.png exists it will show, otherwise the gradient circle still looks nice -->
-        <img src="Logo.png" alt="CYF Logo" onerror="this.style.display='none';this.parentNode.textContent='CYF';" />
+        <img src="Logo.png" alt="CYF Logo"
+             onerror="this.style.display='none';this.parentNode.textContent='CYF';" />
       </div>
       <div class="brand-text">
         <h1>Check Your Flat</h1>
@@ -57,7 +62,7 @@
       <h1 class="hero-title">check your flat</h1>
       <p class="hero-subtitle">
         Upload the exposé, walk through the flat, compare reality vs listing,
-        add photos with markers, sign and export a PDF report – all from your phone.
+        add photos with markers, and export a PDF report – all from your phone.
       </p>
       <div class="hero-wave"></div>
     </header>
@@ -70,6 +75,7 @@
             <button data-step="1" class="active unlocked">1</button>
             <button data-step="2" disabled>2</button>
             <button data-step="3" disabled>3</button>
+            <button data-step="4" disabled>4</button>
           </div>
         </div>
 
@@ -91,15 +97,14 @@
               <span>Upload exposé (PDF)</span>
             </div>
             <div class="step-help">
-             After loading, step 2 unlocks.
+              After loading, step 2 unlocks.
             </div>
           </div>
 
           <div class="upload-area" id="drop-zone">
             <div class="upload-icon">📄</div>
             <p class="upload-title">Drop exposé PDF here</p>
-            <p class="upload-subtitle">
-            </p>
+            <p class="upload-subtitle"></p>
             <button type="button" id="select-file-btn" class="upload-btn-main">
               Make the magic ✨
             </button>
@@ -120,7 +125,7 @@
               <span>Maske Inspektion</span>
             </div>
             <div class="step-help">
-               Fill reality; "Copy from exposé" just helps you start.
+              Fill reality; "Copy from exposé" just helps you start.
             </div>
           </div>
 
@@ -159,17 +164,77 @@
 
           <div style="display:flex;justify-content:flex-end;margin-top:10px;">
             <button type="button" id="go-step3-btn" class="btn-primary">
-              Continue to Step 3 (summary &amp; PDF)
+              Continue to Step 3 (Legal &amp; Finance)
             </button>
           </div>
         </section>
 
-        <!-- STEP 3 -->
+        <!-- STEP 3 – Legal & Finance -->
         <section class="card step-disabled" id="step3-card">
           <div class="step-header">
             <div class="step-title">
               <span class="step-chip">3</span>
-              <span>Validator, signature &amp; PDF</span>
+              <span>Legal &amp; Finance</span>
+            </div>
+            <div class="step-help">
+              Tell us whether the client already has legal and financial advisors.
+              If not, we’ll suggest trusted partners and include them in the report.
+            </div>
+          </div>
+
+          <div class="legal-finance-grid">
+            <!-- Legal block -->
+            <div class="lf-block">
+              <div class="lf-question">
+                Does the client already have a legal advisor?
+              </div>
+
+              <div class="lf-toggle-group" id="legal-toggle-group">
+                <label class="lf-toggle">
+                  <input type="radio" name="hasLegal" id="hasLegalYes" value="yes">
+                  <span class="lf-toggle-pill">Yes</span>
+                </label>
+                <label class="lf-toggle">
+                  <input type="radio" name="hasLegal" id="hasLegalNo" value="no">
+                  <span class="lf-toggle-pill">No</span>
+                </label>
+              </div>
+
+              <p class="lf-hint">
+                If you select <strong>No</strong>, a recommended legal contact will be added to the PDF report.
+              </p>
+            </div>
+
+            <!-- Finance block -->
+            <div class="lf-block">
+              <div class="lf-question">
+                Does the client already have a finance advisor?
+              </div>
+
+              <div class="lf-toggle-group" id="finance-toggle-group">
+                <label class="lf-toggle">
+                  <input type="radio" name="hasFinance" id="hasFinanceYes" value="yes">
+                  <span class="lf-toggle-pill">Yes</span>
+                </label>
+                <label class="lf-toggle">
+                  <input type="radio" name="hasFinance" id="hasFinanceNo" value="no">
+                  <span class="lf-toggle-pill">No</span>
+                </label>
+              </div>
+
+              <p class="lf-hint">
+                If you select <strong>No</strong>, a recommended finance contact will be added to the PDF report.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- STEP 4 – Validator & PDF -->
+        <section class="card step-disabled" id="step4-card">
+          <div class="step-header">
+            <div class="step-title">
+              <span class="step-chip">4</span>
+              <span>Validator &amp; PDF</span>
               <span class="step-badge">Final step</span>
             </div>
           </div>
@@ -192,14 +257,14 @@
         </section>
 
         <!-- HISTORY -->
-      <div class="history-section">
-        <div class="history-header">
-          <h3>History</h3>
-          <!-- optional clear button here -->
+        <div class="history-section">
+          <div class="history-header">
+            <h3>History</h3>
+            <!-- optional clear button here -->
+          </div>
+          <div id="history-list"></div>
         </div>
-      
-        <div id="history-list"></div>
-      </div>
+
         <!-- Version lives OUTSIDE the history card -->
         <div id="version-info" class="version-info"></div>
       </div>
