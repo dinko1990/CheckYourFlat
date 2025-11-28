@@ -6,7 +6,7 @@
 // - Shared data structures (EXPOSE_DATA, inspection fields, mandatory fields, sample notes)
 // Extracted from the original main.js to keep things organized.
 
-const APP_VERSION = "2.2.13";    // change per release
+const APP_VERSION = "2.2.52";    // change per release
 
   
   const { jsPDF } = window.jspdf;
@@ -323,7 +323,11 @@ const SAMPLE_NOTES = {
   baujahr_heizung:
     "Baujahr der Heizung gemäß Unterlagen, mittelfristiger Ersatz prüfen.",
   warmwasser:
-    "Warmwasserversorgung funktionstüchtig, Temperaturverlauf plausibel."
+    "Warmwasserversorgung funktionstüchtig, Temperaturverlauf plausibel.",
+  energieklasse:
+    "Energieeffizienz laut Unterlagen plausibel.",
+  weg:
+    "Angaben aus der WEG-Dokumentation übernommen.",
 };
 
 /**
