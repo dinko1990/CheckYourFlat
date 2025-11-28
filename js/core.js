@@ -181,7 +181,7 @@ const EXPOSE_FIELDS = {
     label: "Fassade – Dämmung",
     type: "select",
     options: ["unbekannt", "Dämmung", "keine Dämmung"],
-    mandatory: false
+    mandatory: true
   },
   dachgeschoss: {
     label: "Dachgeschoss",
