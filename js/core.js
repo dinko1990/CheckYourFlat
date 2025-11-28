@@ -223,6 +223,7 @@ const EXPOSE_FIELDS = {
       "Öl-Zentralheizung",
       "Fernwärme",
       "Fernwärme (Gas)",
+      'Wärmepumpe',
       "Sonstiges"
     ],
     mandatory: false
