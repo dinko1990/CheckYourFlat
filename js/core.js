@@ -2,11 +2,11 @@
 // Global app configuration and shared behavior:
 // - App version and jsPDF access
 // - Sidebar + mobile navigation
-// - Step gating (1 → 2 → 3)
+// - Step gating (1 → 2 → 3→ 4)
 // - Shared data structures (EXPOSE_DATA, inspection fields, mandatory fields, sample notes)
 // Extracted from the original main.js to keep things organized.
 
-const APP_VERSION = "2.2.52";    // change per release
+const APP_VERSION = "2.3.18";    // change per release
 
   
   const { jsPDF } = window.jspdf;
@@ -73,7 +73,8 @@ const APP_VERSION = "2.2.52";    // change per release
   const stepCards = {
     1: document.getElementById("step1-card"),
     2: document.getElementById("step2-card"),
-    3: document.getElementById("step3-card")
+    3: document.getElementById("step3-card"),
+    4: document.getElementById("step4-card")
   };
 
 
