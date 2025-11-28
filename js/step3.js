@@ -137,38 +137,46 @@ generateBtn.addEventListener("click", () => {
 
   // Collect rows from the DOM
   const rows = [];
-  comparisonBody.querySelectorAll("tr").forEach(tr => {
-    const type = tr.dataset.rowType || "field";
-    const cells = tr.querySelectorAll("td");
+comparisonBody.querySelectorAll("tr").forEach(tr => {
+  const type = tr.dataset.rowType || "field";
+  const cells = tr.querySelectorAll("td");
 
-    let desc = "";
-    if (cells[0]) {
-      const firstNode = cells[0].childNodes[0];
-      desc = (firstNode && firstNode.textContent ? firstNode.textContent : "").trim();
+  let desc = "";
+  if (cells[0]) {
+    const firstNode = cells[0].childNodes[0];
+    desc = (firstNode && firstNode.textContent ? firstNode.textContent : "").trim();
+  }
+
+  let reality = "";
+  let photoData = null;
+
+  if (type === "photo") {
+    const img = tr.querySelector(".photo-preview");
+    const textarea = tr.querySelector(".photo-comment");
+    if (textarea) reality = (textarea.value || "").trim();
+    if (img && img.src && img.style.display !== "none") {
+      photoData = img.src;
     }
-
-    let reality = "";
-    let photoData = null;
-
-    if (type === "photo") {
-      const img = tr.querySelector(".photo-preview");
-      const textarea = tr.querySelector(".photo-comment");
-      if (textarea) reality = (textarea.value || "").trim();
-      if (img && img.src && img.style.display !== "none") {
-        photoData = img.src;
-      }
-    } else {
-      const span = tr.querySelector("td.editable .cell-editable");
-      const select = tr.querySelector("td.editable select");
-      if (span) reality = (span.textContent || "").replace(/\s+/g, " ").trim();
-      if (select && select.value) {
-        reality = select.value;
-      }
+  } else {
+    const span = tr.querySelector("td.editable .cell-editable");
+    const select = tr.querySelector("td.editable select");
+    if (span) {
+      reality = (span.textContent || "").replace(/\s+/g, " ").trim();
     }
+    if (select && select.value) {
+      reality = select.value;
+    }
+  }
 
-    if (!desc && !reality && !photoData) return;
-    rows.push({ type, desc, reality, photoData });
-  });
+  // ✅ Only keep this row if there is actual content:
+  const hasContent = (reality && reality.length > 0) || !!photoData;
+  if (!hasContent) {
+    return; // skip empty fields in the PDF
+  }
+
+  rows.push({ type, desc, reality, photoData });
+});
+
 
   // Render rows into PDF
   rows.forEach(row => {
