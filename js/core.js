@@ -6,7 +6,7 @@
 // - Shared data structures (EXPOSE_DATA, inspection fields, mandatory fields, sample notes)
 // Extracted from the original main.js to keep things organized.
 
-const APP_VERSION = "2.4.1";    // change per release
+const APP_VERSION = "2.4.2";    // change per release
 
   
   const { jsPDF } = window.jspdf;
