@@ -238,8 +238,20 @@ const EXPOSE_FIELDS = {
     type: "select",
     options: ["unbekannt", "zentral", "dezentral"],
     mandatory: false
-  }
+  },
+    energieklasse: {
+    label: "Energieklasse",
+    type: "text",
+    mandatory: false
+  },
+  weg: {
+    label: "WEG",
+    type: "text",
+    mandatory: false
+  },
 };
+
+
 
 /**
  * EXPOSE_DATA:
