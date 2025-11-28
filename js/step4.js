@@ -59,7 +59,7 @@ function clearValidationErrors() {
   }
 
   // Clear mandatory row errors from Step 2
-  comparisonBody.querySelectorAll("tr.mandatory-row").forEach(tr => {
+  comparisonBody.querySelectorAll("tr.mandatory-row").forEach((tr) => {
     tr.classList.remove("row-error");
     const cell = tr.querySelector("td.editable");
     if (cell) cell.classList.remove("field-error");
@@ -171,7 +171,7 @@ generateBtn.addEventListener("click", () => {
 
   // Collect rows from the DOM
   const rows = [];
-  comparisonBody.querySelectorAll("tr").forEach(tr => {
+  comparisonBody.querySelectorAll("tr").forEach((tr) => {
     const type = tr.dataset.rowType || "field";
     const cells = tr.querySelectorAll("td");
 
@@ -212,7 +212,7 @@ generateBtn.addEventListener("click", () => {
   });
 
   // Render rows into PDF
-  rows.forEach(row => {
+  rows.forEach((row) => {
     if (y > 270) {
       doc.addPage();
       y = 20;
@@ -244,28 +244,33 @@ generateBtn.addEventListener("click", () => {
   });
 
   /* ========= LEGAL / FINANCE BUSINESS CARD AT BOTTOM ========= */
-  if ((needsLegalContact || needsFinanceContact) &&
-      (typeof LEGAL_AGENT !== "undefined" || typeof FINANCE_AGENT !== "undefined")) {
-
-    // Always put the card on its own page bottom for clean layout
+  if (
+    (needsLegalContact || needsFinanceContact) &&
+    (typeof LEGAL_AGENT !== "undefined" || typeof FINANCE_AGENT !== "undefined")
+  ) {
+    // Put the card on a separate, clean page
     doc.addPage();
 
-    const pageHeight = 297; // A4 in mm at 72 dpi units for jsPDF "mm"
-    const cardHeight = 40;
-    const margin = 12;
-    const cardY = pageHeight - cardHeight - margin;
-    const cardX = margin;
+    const pageHeight = 297; // A4 height in mm for jsPDF "mm" units
+    const margin = 15;
+    const cardHeight = 48;
     const cardWidth = 210 - margin * 2;
+    const cardX = margin;
+    const cardY = pageHeight - margin - cardHeight;
 
-    // Two-color "gradient-ish" background: left purple, right orange
-    // Left half: purple
-    doc.setFillColor(76, 63, 255); // #4c3fff
-    doc.roundedRect(cardX, cardY, cardWidth / 2, cardHeight, 3, 3, "F");
-    // Right half: orange
-    doc.setFillColor(255, 141, 88); // #ff8d58
-    doc.roundedRect(cardX + cardWidth / 2, cardY, cardWidth / 2, cardHeight, 3, 3, "F");
+    // Approximate the gradient (#ffc977 → #ff88ae) with a soft peach border
+    const borderColor = { r: 255, g: 196, b: 140 };
 
-    // Title depends on which contact(s) we show
+    // Outer rounded border
+    doc.setDrawColor(borderColor.r, borderColor.g, borderColor.b);
+    doc.setLineWidth(1.4);
+    doc.roundedRect(cardX, cardY, cardWidth, cardHeight, 4, 4, "S");
+
+    // White inner area
+    doc.setFillColor(255, 255, 255);
+    doc.rect(cardX + 1.4, cardY + 1.4, cardWidth - 2.8, cardHeight - 2.8, "F");
+
+    // Decide title
     let title = "";
     if (needsLegalContact && needsFinanceContact) {
       title = "Legal & Finance support";
@@ -275,44 +280,61 @@ generateBtn.addEventListener("click", () => {
       title = "Finance support";
     }
 
-    // Text styling
-    doc.setTextColor(255, 255, 255);
+    const innerX = cardX + 6;
+    let textY = cardY + 11;
+
+    // Title
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
-    doc.text(title, cardX + 6, cardY + 9);
+    doc.setTextColor(40, 20, 60);
+    doc.text(title, innerX, textY);
 
-    let textY = cardY + 15;
+    // Body
+    textY += 5;
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
+    doc.setTextColor(40, 20, 60);
+
+    const maxWidth = cardWidth - 12;
 
     // LEGAL block
     if (needsLegalContact && typeof LEGAL_AGENT !== "undefined") {
-      doc.text(`${LEGAL_AGENT.name} – ${LEGAL_AGENT.firm}`, cardX + 6, textY);
+      doc.text(
+        `${LEGAL_AGENT.name} – ${LEGAL_AGENT.firm}`,
+        innerX,
+        textY
+      );
       textY += 4;
-      doc.text(`Phone: ${LEGAL_AGENT.phone}`, cardX + 6, textY);
+      doc.text(`Phone: ${LEGAL_AGENT.phone}`, innerX, textY);
       textY += 4;
-      doc.text(`Email: ${LEGAL_AGENT.email}`, cardX + 6, textY);
+      doc.text(`Email: ${LEGAL_AGENT.email}`, innerX, textY);
       textY += 4;
-      const legalNoteLines = doc.splitTextToSize(LEGAL_AGENT.note, cardWidth - 12);
-      doc.text(legalNoteLines, cardX + 6, textY);
+
+      const legalNoteLines = doc.splitTextToSize(LEGAL_AGENT.note, maxWidth);
+      doc.text(legalNoteLines, innerX, textY);
       textY += legalNoteLines.length * 4 + 2;
 
-      if (needsFinanceContact) {
-        textY += 2; // small gap between legal and finance sections
-      }
+      if (needsFinanceContact) textY += 2; // small gap
     }
 
     // FINANCE block
     if (needsFinanceContact && typeof FINANCE_AGENT !== "undefined") {
-      doc.text(`${FINANCE_AGENT.name} – ${FINANCE_AGENT.firm}`, cardX + 6, textY);
+      doc.text(
+        `${FINANCE_AGENT.name} – ${FINANCE_AGENT.firm}`,
+        innerX,
+        textY
+      );
       textY += 4;
-      doc.text(`Phone: ${FINANCE_AGENT.phone}`, cardX + 6, textY);
+      doc.text(`Phone: ${FINANCE_AGENT.phone}`, innerX, textY);
       textY += 4;
-      doc.text(`Email: ${FINANCE_AGENT.email}`, cardX + 6, textY);
+      doc.text(`Email: ${FINANCE_AGENT.email}`, innerX, textY);
       textY += 4;
-      const finNoteLines = doc.splitTextToSize(FINANCE_AGENT.note, cardWidth - 12);
-      doc.text(finNoteLines, cardX + 6, textY);
-      // textY not really needed further, card ends here
+
+      const finNoteLines = doc.splitTextToSize(
+        FINANCE_AGENT.note,
+        maxWidth
+      );
+      doc.text(finNoteLines, innerX, textY);
     }
   }
 
@@ -360,95 +382,3 @@ approveDownloadBtn.addEventListener("click", () => {
   renderVersionInfo();
   initRowDragging();
 });
-
-
-
-
-/* ========= LEGAL / FINANCE BUSINESS CARD AT BOTTOM ========= */
-if (
-  (needsLegalContact || needsFinanceContact) &&
-  (typeof LEGAL_AGENT !== "undefined" || typeof FINANCE_AGENT !== "undefined")
-) {
-
-  // Add new page for clean layout
-  doc.addPage();
-
-  const pageHeight = 297;
-  const margin = 12;
-
-  const cardHeight = 40;
-  const cardX = margin;
-  const cardWidth = 210 - margin * 2;
-  const cardY = pageHeight - cardHeight - margin;
-
-  // Draw BORDER ONLY using your gradient
-  // Approximation: left half yellowish → right half pink, visually blending
-  const leftFill = "#ffc977";  // warm yellow
-  const rightFill = "#ff88ae"; // rose-pink
-
-  const borderThickness = 1.2;
-
-  // LEFT border part
-  doc.setDrawColor(leftFill);
-  doc.setLineWidth(borderThickness);
-  doc.roundedRect(cardX, cardY, cardWidth / 2, cardHeight, 3, 3, "S");
-
-  // RIGHT border part
-  doc.setDrawColor(rightFill);
-  doc.setLineWidth(borderThickness);
-  doc.roundedRect(cardX + cardWidth / 2, cardY, cardWidth / 2, cardHeight, 3, 3, "S");
-
-  // White inner card
-  doc.setFillColor(255, 255, 255);
-  doc.rect(cardX + borderThickness, cardY + borderThickness,
-           cardWidth - borderThickness * 2,
-           cardHeight - borderThickness * 2,
-           "F");
-
-  // Title depends on which contact(s) appear
-  let title = "";
-  if (needsLegalContact && needsFinanceContact)       title = "Legal & Finance support";
-  else if (needsLegalContact)                         title = "Legal support";
-  else if (needsFinanceContact)                       title = "Finance support";
-
-  // Title
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-  doc.setTextColor(40, 20, 60);
-  doc.text(title, cardX + 6, cardY + 10);
-
-  // Body text
-  let textY = cardY + 17;
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(40, 20, 60);
-
-  // LEGAL
-  if (needsLegalContact && typeof LEGAL_AGENT !== "undefined") {
-    doc.text(`${LEGAL_AGENT.name} – ${LEGAL_AGENT.firm}`, cardX + 6, textY);
-    textY += 4;
-    doc.text(`Phone: ${LEGAL_AGENT.phone}`, cardX + 6, textY);
-    textY += 4;
-    doc.text(`Email: ${LEGAL_AGENT.email}`, cardX + 6, textY);
-    textY += 4;
-
-    const legalNoteLines = doc.splitTextToSize(LEGAL_AGENT.note, cardWidth - 12);
-    doc.text(legalNoteLines, cardX + 6, textY);
-    textY += legalNoteLines.length * 4 + 2;
-
-    if (needsFinanceContact) textY += 2;
-  }
-
-  // FINANCE
-  if (needsFinanceContact && typeof FINANCE_AGENT !== "undefined") {
-    doc.text(`${FINANCE_AGENT.name} – ${FINANCE_AGENT.firm}`, cardX + 6, textY);
-    textY += 4;
-    doc.text(`Phone: ${FINANCE_AGENT.phone}`, cardX + 6, textY);
-    textY += 4;
-    doc.text(`Email: ${FINANCE_AGENT.email}`, cardX + 6, textY);
-    textY += 4;
-
-    const finNoteLines = doc.splitTextToSize(FINANCE_AGENT.note, cardWidth - 12);
-    doc.text(finNoteLines, cardX + 6, textY);
-  }
-}
