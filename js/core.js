@@ -145,17 +145,17 @@ const EXPOSE_FIELDS = {
     label: "Objekttyp",
     type: "select",
     options: ["Etagenwohnung", "Wohnung", "Einfamilienhaus", "Gewerbe", "MFH"],
-    mandatory: false
+    mandatory: true
   },
   baujahr: {
     label: "Baujahr",
     type: "text",
-    mandatory: false
+    mandatory: true
   },
   wohnflaeche: {
     label: "Wohnfläche",
     type: "text",
-    mandatory: true
+    mandatory: false
   },
   grundstueck: {
     label: "bei Haus Grundstücksfläche",
