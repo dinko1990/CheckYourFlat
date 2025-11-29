@@ -349,8 +349,7 @@ generateBtn.addEventListener("click", () => {
   modalBackdrop.classList.add("visible");
 });
 
-/* ========= TERMS & CONDITIONS (ALWAYS LAST PAGE) ========= */
-doc.addPage();
+/* ========= TERMS & CONDITIONS (ALWAYS LAST PAGE) ========= */;
 
 doc.setFont("helvetica", "bold");
 doc.setFontSize(12);
