@@ -348,6 +348,41 @@ generateBtn.addEventListener("click", () => {
   modalBackdrop.classList.add("visible");
 });
 
+/* ========= TERMS & CONDITIONS (ALWAYS LAST PAGE) ========= */
+doc.addPage();
+
+doc.setFont("helvetica", "bold");
+doc.setFontSize(12);
+doc.setTextColor(30, 12, 60);
+doc.text("Terms & Conditions", 12, 20);
+
+doc.setFont("helvetica", "normal");
+doc.setFontSize(9);
+doc.setTextColor(40, 20, 60);
+
+const terms = [
+  "This inspection report is provided for informational purposes only. It reflects the visible and",
+  "accessible conditions observed at the time of the inspection. No guarantee, warranty, or",
+  "representation is made regarding the completeness, accuracy, or future condition of the property.",
+  "",
+  "Hidden defects, structural elements not visible during the inspection, and systems not tested",
+  "are excluded from this report. This document does not replace legal, financial, architectural,",
+  "or engineering advice.",
+  "",
+  "The client remains responsible for verifying all information independently and consulting qualified",
+  "professionals before making decisions. The inspector and Check Your Flat shall not be held liable",
+  "for any loss, damage, or decisions made based on the contents of this report.",
+  "",
+  "Use of this report constitutes acceptance of these terms."
+];
+
+let termsStartY = 30;
+terms.forEach(line => {
+  doc.text(line, 12, termsStartY);
+  termsStartY += 5;
+});
+
+
 /* ========= MODAL CONTROL ========= */
 
 function closeModal() {
