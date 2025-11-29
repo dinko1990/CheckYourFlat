@@ -339,18 +339,8 @@ generateBtn.addEventListener("click", () => {
     }
   }
 
-  const pdfBlob = doc.output("blob");
-  lastPdfBlob = pdfBlob;
-
-  const url = URL.createObjectURL(pdfBlob);
-  pdfFrame.src = url;
-  modalValidatorLabel.textContent = validator;
-  modalValidatorFooter.textContent = "Check the PDF. If OK, approve & download.";
-  modalBackdrop.classList.add("visible");
-});
-
-/* ========= TERMS & CONDITIONS (ALWAYS LAST PAGE) ========= */;
-
+  /* ========= TERMS & CONDITIONS (ALWAYS LAST PAGE) ========= */;
+doc.addPage();
 doc.setFont("helvetica", "bold");
 doc.setFontSize(12);
 doc.setTextColor(30, 12, 60);
@@ -381,6 +371,18 @@ terms.forEach(line => {
   doc.text(line, 12, termsStartY);
   termsStartY += 5;
 });
+
+  const pdfBlob = doc.output("blob");
+  lastPdfBlob = pdfBlob;
+
+  const url = URL.createObjectURL(pdfBlob);
+  pdfFrame.src = url;
+  modalValidatorLabel.textContent = validator;
+  modalValidatorFooter.textContent = "Check the PDF. If OK, approve & download.";
+  modalBackdrop.classList.add("visible");
+});
+
+
 
 
 /* ========= MODAL CONTROL ========= */
