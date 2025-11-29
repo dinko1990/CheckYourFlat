@@ -5,6 +5,7 @@
 // - Validates mandatory inspection fields (from step2.js)
 // - Generates the PDF report using jsPDF
 // - Adds a Legal/Finance "business card" at the bottom if client has no advisor
+// - Add T&C
 // - Controls the preview modal and final download confirmation
 
 /* ========= STEP 4: VALIDATOR ========= */
