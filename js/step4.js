@@ -339,38 +339,41 @@ generateBtn.addEventListener("click", () => {
     }
   }
 
-  /* ========= TERMS & CONDITIONS (ALWAYS LAST PAGE) ========= */;
+/* ========= TERMS & CONDITIONS (GERMAN – SMALL FOOTER) ========= */
 doc.addPage();
+
 doc.setFont("helvetica", "bold");
-doc.setFontSize(12);
-doc.setTextColor(30, 12, 60);
-doc.text("Terms & Conditions", 12, 20);
+doc.setFontSize(9);
+doc.setTextColor(60, 40, 80);
+
+doc.text("Hinweis & Haftungsausschluss", 12, 265);
 
 doc.setFont("helvetica", "normal");
-doc.setFontSize(9);
-doc.setTextColor(40, 20, 60);
+doc.setFontSize(7);
+doc.setTextColor(60, 40, 80);
 
-const terms = [
-  "This inspection report is provided for informational purposes only. It reflects the visible and",
-  "accessible conditions observed at the time of the inspection. No guarantee, warranty, or",
-  "representation is made regarding the completeness, accuracy, or future condition of the property.",
+const termsDE = [
+  "Dieser Bericht dient ausschließlich Informationszwecken und basiert auf den zum Zeitpunkt der Begehung",
+  "sichtbaren und zugänglichen Bereichen. Es wird keine Gewähr für Vollständigkeit, Genauigkeit oder zukünftige",
+  "Entwicklungen des Objektzustands übernommen.",
   "",
-  "Hidden defects, structural elements not visible during the inspection, and systems not tested",
-  "are excluded from this report. This document does not replace legal, financial, architectural,",
-  "or engineering advice.",
+  "Nicht einsehbare Bauteile, versteckte Mängel sowie technische Anlagen, die während der Begehung nicht",
+  "getestet wurden, sind vom Umfang ausgeschlossen. Dieser Bericht ersetzt keine rechtliche, finanzielle oder",
+  "technische Beratung.",
   "",
-  "The client remains responsible for verifying all information independently and consulting qualified",
-  "professionals before making decisions. The inspector and Check Your Flat shall not be held liable",
-  "for any loss, damage, or decisions made based on the contents of this report.",
+  "Der Auftraggeber ist verpflichtet, alle Angaben eigenständig zu prüfen und bei Bedarf qualifizierte",
+  "Fachpersonen hinzuzuziehen. Weder der Inspektor noch Check Your Flat haften für Entscheidungen oder",
+  "Schäden, die aus der Nutzung dieses Berichts entstehen.",
   "",
-  "Use of this report constitutes acceptance of these terms."
+  "Mit Verwendung dieses Dokuments erkennt der Auftraggeber diese Bedingungen an."
 ];
 
-let termsStartY = 30;
-terms.forEach(line => {
-  doc.text(line, 12, termsStartY);
-  termsStartY += 5;
+let yPos = 272;
+termsDE.forEach(line => {
+  doc.text(line, 12, yPos);
+  yPos += 4;
 });
+
 
   const pdfBlob = doc.output("blob");
   lastPdfBlob = pdfBlob;
