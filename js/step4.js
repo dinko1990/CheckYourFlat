@@ -46,6 +46,38 @@ let logoImageData = null;
   img.src = "Logo.png";
 })();
 
+let legalCardImageData = null;
+let financeCardImageData = null;
+
+// Load legal card
+(function loadLegalCard() {
+    const img = new Image();
+    img.src = "img/legal_card.png";   // ← PATH HERE
+    img.crossOrigin = "Anonymous";
+    img.onload = () => {
+        let c = document.createElement("canvas");
+        c.width = img.width;
+        c.height = img.height;
+        c.getContext("2d").drawImage(img, 0, 0);
+        legalCardImageData = c.toDataURL("image/png");
+    };
+})();
+
+// Load finance card
+(function loadFinanceCard() {
+    const img = new Image();
+    img.src = "img/finance_card.png";  // ← PATH HERE
+    img.crossOrigin = "Anonymous";
+    img.onload = () => {
+        let c = document.createElement("canvas");
+        c.width = img.width;
+        c.height = img.height;
+        c.getContext("2d").drawImage(img, 0, 0);
+        financeCardImageData = c.toDataURL("image/png");
+    };
+})();
+
+
 /* ========= VALIDATION HELPERS ========= */
 
 function clearValidationErrors() {
@@ -244,7 +276,6 @@ generateBtn.addEventListener("click", () => {
     }
   });
 
-  /* ========= LEGAL / FINANCE BUSINESS CARD AT BOTTOM ========= */
 /* ========= LEGAL / FINANCE BUSINESS CARD (AFTER CONTENT) ========= */
 if (needsLegalContact || needsFinanceContact) {
 
