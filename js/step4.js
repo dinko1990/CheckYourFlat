@@ -339,8 +339,6 @@ if (needsLegalContact || needsFinanceContact) {
 
 
 /* ========= TERMS & CONDITIONS (GERMAN – SMALL FOOTER) ========= */
-doc.addPage();
-
 doc.setFont("helvetica", "bold");
 doc.setFontSize(9);
 doc.setTextColor(60, 40, 80);
