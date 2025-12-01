@@ -245,99 +245,67 @@ generateBtn.addEventListener("click", () => {
   });
 
   /* ========= LEGAL / FINANCE BUSINESS CARD AT BOTTOM ========= */
-  if (
-    (needsLegalContact || needsFinanceContact) &&
-    (typeof LEGAL_AGENT !== "undefined" || typeof FINANCE_AGENT !== "undefined")
-  ) {
-    // Put the card on a separate, clean page
-    doc.addPage();
+/* ========= LEGAL / FINANCE BUSINESS CARD (AFTER CONTENT) ========= */
+if (needsLegalContact || needsFinanceContact) {
 
-    const pageHeight = 297; // A4 height in mm for jsPDF "mm" units
-    const margin = 15;
-    const cardHeight = 48;
-    const cardWidth = 210 - margin * 2;
-    const cardX = margin;
-    const cardY = pageHeight - margin - cardHeight;
+    const hasLegal = !!legalCardImageData;
+    const hasFinance = !!financeCardImageData;
 
-    // Approximate the gradient (#ffc977 → #ff88ae) with a soft peach border
-    const borderColor = { r: 255, g: 196, b: 140 };
+    if (hasLegal || hasFinance) {
 
-    // Outer rounded border
-    doc.setDrawColor(borderColor.r, borderColor.g, borderColor.b);
-    doc.setLineWidth(1.4);
-    doc.roundedRect(cardX, cardY, cardWidth, cardHeight, 4, 4, "S");
+        const pageWidth = 210;
+        const cardWidth = 60;    // your PNGs height/width in mm
+        const cardHeight = 60;
+        const gap = 12;          // space between table and cards
 
-    // White inner area
-    doc.setFillColor(255, 255, 255);
-    doc.rect(cardX + 1.4, cardY + 1.4, cardWidth - 2.8, cardHeight - 2.8, "F");
+        // Move down a little from last printed y
+        y += gap;
 
-    // Decide title
-    let title = "";
-    if (needsLegalContact && needsFinanceContact) {
-      title = "Legal & Finance support";
-    } else if (needsLegalContact) {
-      title = "Legal support";
-    } else if (needsFinanceContact) {
-      title = "Finance support";
+        // If cards exceed page bottom → new page
+        if (y + cardHeight + 10 > 297) {
+            doc.addPage();
+            y = 20;
+        }
+
+        let legalX = null;
+        let financeX = null;
+
+        // Layout rules
+        if (needsLegalContact && needsFinanceContact && hasLegal && hasFinance) {
+            // Two centered cards
+            const totalWidth = cardWidth * 2 + 10;
+            const startX = (pageWidth - totalWidth) / 2;
+            legalX = startX;
+            financeX = startX + cardWidth + 10;
+
+        } else if (needsLegalContact && hasLegal) {
+            legalX = (pageWidth - cardWidth) / 2;
+
+        } else if (needsFinanceContact && hasFinance) {
+            financeX = (pageWidth - cardWidth) / 2;
+        }
+
+        // LEGAL card
+        if (needsLegalContact && hasLegal && legalX !== null) {
+            doc.addImage(legalCardImageData, "PNG", legalX, y, cardWidth, cardHeight);
+            doc.link(legalX, y, cardWidth, cardHeight, {
+                url: LEGAL_AGENT?.url || "https://en.jslegal.de/"
+            });
+        }
+
+        // FINANCE card
+        if (needsFinanceContact && hasFinance && financeX !== null) {
+            doc.addImage(financeCardImageData, "PNG", financeX, y, cardWidth, cardHeight);
+            doc.link(financeX, y, cardWidth, cardHeight, {
+                url: FINANCE_AGENT?.url || "https://fin-consult.example/"
+            });
+        }
+
+        // Move y after cards for T&C
+        y += cardHeight + 10;
     }
+}
 
-    const innerX = cardX + 6;
-    let textY = cardY + 11;
-
-    // Title
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
-    doc.setTextColor(40, 20, 60);
-    doc.text(title, innerX, textY);
-
-    // Body
-    textY += 5;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    doc.setTextColor(40, 20, 60);
-
-    const maxWidth = cardWidth - 12;
-
-    // LEGAL block
-    if (needsLegalContact && typeof LEGAL_AGENT !== "undefined") {
-      doc.text(
-        `${LEGAL_AGENT.name} – ${LEGAL_AGENT.firm}`,
-        innerX,
-        textY
-      );
-      textY += 4;
-      doc.text(`Phone: ${LEGAL_AGENT.phone}`, innerX, textY);
-      textY += 4;
-      doc.text(`Email: ${LEGAL_AGENT.email}`, innerX, textY);
-      textY += 4;
-
-      const legalNoteLines = doc.splitTextToSize(LEGAL_AGENT.note, maxWidth);
-      doc.text(legalNoteLines, innerX, textY);
-      textY += legalNoteLines.length * 4 + 2;
-
-      if (needsFinanceContact) textY += 2; // small gap
-    }
-
-    // FINANCE block
-    if (needsFinanceContact && typeof FINANCE_AGENT !== "undefined") {
-      doc.text(
-        `${FINANCE_AGENT.name} – ${FINANCE_AGENT.firm}`,
-        innerX,
-        textY
-      );
-      textY += 4;
-      doc.text(`Phone: ${FINANCE_AGENT.phone}`, innerX, textY);
-      textY += 4;
-      doc.text(`Email: ${FINANCE_AGENT.email}`, innerX, textY);
-      textY += 4;
-
-      const finNoteLines = doc.splitTextToSize(
-        FINANCE_AGENT.note,
-        maxWidth
-      );
-      doc.text(finNoteLines, innerX, textY);
-    }
-  }
 
 /* ========= TERMS & CONDITIONS (GERMAN – SMALL FOOTER) ========= */
 doc.addPage();
